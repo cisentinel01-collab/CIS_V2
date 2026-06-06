@@ -108,24 +108,24 @@ AR = {
 # THEME
 # ─────────────────────────────────────────────────────────────────────────────
 COLORS = {
-    "bg_dark":       "#0F172A",
-    "bg_nav":        "#1E293B",
-    "bg_card":       "#1E293B",
-    "bg_card2":      "#334155",
-    "accent":        "#38BDF8",
-    "accent2":       "#0EA5E9",
+    "bg_dark":       "#0B0F19",
+    "bg_nav":        "#111827",
+    "bg_card":       "#111827",
+    "bg_card2":      "#1F2937",
+    "accent":        "#60A5FA",
+    "accent2":       "#3B82F6",
     "accent_green":  "#10B981",
-    "accent_red":    "#F43F5E",
+    "accent_red":    "#EF4444",
     "accent_orange": "#F59E0B",
     "accent_purple": "#8B5CF6",
-    "text_primary":  "#F8FAFC",
-    "text_secondary":"#94A3B8",
-    "text_muted":    "#64748B",
-    "border":        "#1E293B",
-    "border2":       "#334155",
-    "hover":         "#0EA5E920",
-    "selected":      "#0EA5E940",
-    "glass":         "rgba(56, 189, 248, 0.05)",
+    "text_primary":  "#F9FAFB",
+    "text_secondary":"#9CA3AF",
+    "text_muted":    "#6B7280",
+    "border":        "#1F2937",
+    "border2":       "#374151",
+    "hover":         "#3B82F615",
+    "selected":      "#3B82F630",
+    "glass":         "rgba(96, 165, 250, 0.05)",
     "warning_bg":    "#451A03",
     "critical_bg":   "#450A0A",
     "row_warning":   "#2D1B02",
@@ -136,7 +136,7 @@ STYLESHEET = f"""
 QMainWindow, QDialog, QWidget {{
     background-color: {COLORS['bg_dark']};
     color: {COLORS['text_primary']};
-    font-family: 'Segoe UI', 'Arial', 'Tahoma', sans-serif;
+    font-family: 'Segoe UI', 'Cairo', 'Tahoma', sans-serif;
     font-size: 14px;
 }}
 QLabel {{
@@ -254,7 +254,7 @@ QTabBar::tab:selected {{ background-color: {COLORS['bg_card']}; color: {COLORS['
 QFrame#card {{
     background-color: {COLORS['bg_card']}; border: 1.5px solid {COLORS['border2']}; border-radius: 15px;
 }}
-"""QFrame#separator {{ background: {COLORS['border2']}; max-height: 1px; }}
+QFrame#separator {{ background: {COLORS['border2']}; max-height: 1px; }}
 QStatusBar {{
     background: {COLORS['bg_nav']}; color: {COLORS['text_secondary']};
     font-size: 12px; border-top: 1px solid {COLORS['border2']};
@@ -849,6 +849,29 @@ class DatabaseManager:
             ORDER BY sm.created_at DESC
         """, (product_id,))
 
+    def get_most_used_products(self, limit=10):
+        """Returns products with highest issuance frequency."""
+        return self.fetchall("""
+            SELECT p.name, COUNT(soi.id) as usage_frequency, SUM(soi.quantity) as total_issued
+            FROM products p
+            JOIN stock_out_items soi ON p.id = soi.product_id
+            GROUP BY p.id
+            ORDER BY usage_frequency DESC, total_issued DESC
+            LIMIT ?
+        """, (limit,))
+
+    def get_product_purchase_insights(self, product_id):
+        """Returns the most recent purchase price and supplier for a product."""
+        return self.fetchone("""
+            SELECT sii.unit_price, s.name as supplier_name, si.date, s.id as supplier_id
+            FROM stock_in_items sii
+            JOIN stock_in si ON sii.stock_in_id = si.id
+            JOIN suppliers s ON si.supplier_id = s.id
+            WHERE sii.product_id = ?
+            ORDER BY si.date DESC, si.created_at DESC
+            LIMIT 1
+        """, (product_id,))
+
 
 # Singleton DB
 db = DatabaseManager()
@@ -1423,23 +1446,33 @@ class DashboardPage(QWidget):
         ccl.addLayout(leg)
         cr.addWidget(chart_card, 2)
 
-        top_card = QFrame()
-        top_card.setObjectName("card")
-        tcl = QVBoxLayout(top_card)
-        tcl.setContentsMargins(14, 14, 14, 14)
-        tt = QLabel("🏆  أعلى المنتجات قيمةً")
-        tt.setStyleSheet(f"font-weight: 700; font-size: 13px; color: {COLORS['text_primary']};")
-        tcl.addWidget(tt)
+        # Intelligence Card
+        intel_card = QFrame()
+        intel_card.setObjectName("card")
+        icl = QVBoxLayout(intel_card)
+        icl.setContentsMargins(14, 14, 14, 14)
+        it = QLabel("🧠  التحليلات الذكية")
+        it.setStyleSheet(f"font-weight: 700; font-size: 13px; color: {COLORS['accent']};")
+        icl.addWidget(it)
+        self.intel_lbl = QLabel("جاري تحليل البيانات...")
+        self.intel_lbl.setWordWrap(True)
+        self.intel_lbl.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 12px; line-height: 1.5;")
+        icl.addWidget(self.intel_lbl)
+        icl.addStretch()
+
+        tt = QLabel("🏆  أكثر المنتجات استخداماً")
+        tt.setStyleSheet(f"font-weight: 700; font-size: 12px; color: {COLORS['text_primary']}; margin-top: 10px;")
+        icl.addWidget(tt)
         self.top_table = QTableWidget()
-        self.top_table.setColumnCount(3)
-        self.top_table.setHorizontalHeaderLabels(["المنتج", "الكمية", "القيمة"])
+        self.top_table.setColumnCount(2)
+        self.top_table.setHorizontalHeaderLabels(["المنتج", "التكرار"])
         self.top_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.top_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.top_table.setAlternatingRowColors(True)
+        self.top_table.setFixedHeight(150)
         self.top_table.verticalHeader().setVisible(False)
         self.top_table.setShowGrid(False)
-        tcl.addWidget(self.top_table)
-        cr.addWidget(top_card, 1)
+        icl.addWidget(self.top_table)
+        cr.addWidget(intel_card, 1)
         main.addLayout(cr)
 
         # Recent movements
@@ -1495,14 +1528,26 @@ class DashboardPage(QWidget):
             vals_in = vals_out = [0] * 7
         self.movement_chart.set_data(labels, vals_in, vals_out)
 
-        top = db.fetchall("""SELECT name, quantity, (quantity*selling_price) as value
-            FROM products WHERE is_active=1 ORDER BY value DESC LIMIT 8""")
-        self.top_table.setRowCount(len(top))
+        # Intelligence Data
+        most_used = db.get_most_used_products(5)
+        self.top_table.setRowCount(len(most_used))
         currency = db.get_setting("currency", "AED")
-        for i, row in enumerate(top):
+        for i, row in enumerate(most_used):
             self.top_table.setItem(i, 0, QTableWidgetItem(row['name']))
-            self.top_table.setItem(i, 1, QTableWidgetItem(f"{row['quantity']:.0f}"))
-            self.top_table.setItem(i, 2, QTableWidgetItem(f"{currency} {row['value']:,.0f}"))
+            self.top_table.setItem(i, 1, QTableWidgetItem(f"{row['usage_frequency']} طلبات"))
+
+        # Smart Insights Text
+        if most_used:
+            best_prod = most_used[0]['name']
+            insights = db.get_product_purchase_insights(db.fetchone("SELECT id FROM products WHERE name=?", (best_prod,))['id'])
+            if insights:
+                self.intel_lbl.setText(f"المنتج الأكثر طلباً هو <b>{best_prod}</b>.<br>"
+                                       f"يتم شراؤه عادةً من <b>{insights['supplier_name']}</b> "
+                                       f"بسعر <b>{currency} {insights['unit_price']:.2f}</b>.")
+            else:
+                self.intel_lbl.setText(f"المنتج الأكثر طلباً هو <b>{best_prod}</b>. لم يتم تسجيل عمليات شراء مؤخراً.")
+        else:
+            self.intel_lbl.setText("ابدأ بتسجيل عمليات الصرف للحصول على تحليلات ذكية.")
 
         recent_mvs = db.fetchall("""
             SELECT sm.movement_number, sm.movement_type, p.name as product_name,
@@ -1950,9 +1995,9 @@ class ProductsPage(QWidget):
         lay.addLayout(hdr)
 
         self.table = QTableWidget()
-        self.table.setColumnCount(10)
+        self.table.setColumnCount(11)
         self.table.setHorizontalHeaderLabels(["الكود", "الاسم", "الفئة", "المخزن", "الكمية",
-                                               "الحد الأدنى", "التنبيه", "سعر الشراء", "الحالة", "إجراءات"])
+                                               "الحد الأدنى", "التنبيه", "آخر سعر شراء", "المورد المفضل", "الحالة", "إجراءات"])
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
@@ -1981,6 +2026,7 @@ class ProductsPage(QWidget):
             WHERE {where} ORDER BY p.name
         """, params)
         self.table.setRowCount(len(rows))
+        currency = db.get_setting("currency", "AED")
         warnings, criticals = [], []
         for i, r in enumerate(rows):
             qty = r['quantity'] or 0
@@ -1991,10 +2037,15 @@ class ProductsPage(QWidget):
             if is_critical: criticals.append(dict(r))
             elif is_warning: warnings.append(dict(r))
 
+            # Intelligence for each row
+            insights = db.get_product_purchase_insights(r['id'])
+            last_price = f"{currency} {insights['unit_price']:.2f}" if insights else f"{currency} {r['purchase_price']:.2f}"
+            fav_supplier = insights['supplier_name'] if insights else (r['supplier_name'] or "—")
+
             for col, val in enumerate([r['product_id'], r['name'], r['category'] or "",
                                         r['warehouse_name'] or "", f"{qty:.0f}",
                                         f"{min_q:.0f}", f"{alert_q:.0f}",
-                                        f"AED {r['purchase_price']:.2f}"]):
+                                        last_price, fav_supplier]):
                 item = QTableWidgetItem(val)
                 if is_critical:
                     item.setBackground(QColor(COLORS['row_critical']))
@@ -2026,7 +2077,7 @@ class ProductsPage(QWidget):
             tb_btn.clicked.connect(lambda _, row=dict(r): self.show_trace(row))
             bl.addWidget(eb)
             bl.addWidget(tb_btn)
-            self.table.setCellWidget(i, 9, btns)
+            self.table.setCellWidget(i, 10, btns)
 
         if warnings or criticals:
             self.stock_alert.emit(warnings, criticals)
@@ -3658,12 +3709,15 @@ class SettingsPage(QWidget):
         self.alarm_cb.setChecked(db.get_setting("alarm_enabled", "true") == "true")
         self.auto_backup_cb = QCheckBox("النسخ الاحتياطي التلقائي")
         self.auto_backup_cb.setChecked(db.get_setting("auto_backup", "true") == "true")
+        self.notif_sound_cb = QCheckBox("تفعيل صوت التنبيه")
+        self.notif_sound_cb.setChecked(db.get_setting("notif_sound", "true") == "true")
 
         f1.addRow("اسم الشركة:", self.company_edit)
         f1.addRow("العملة:", self.currency_combo)
         f1.addRow("نسبة الضريبة (%):", self.tax_spin)
         f1.addRow("", self.alarm_cb)
         f1.addRow("", self.auto_backup_cb)
+        f1.addRow("", self.notif_sound_cb)
 
         save_btn = QPushButton("💾  حفظ الإعدادات")
         save_btn.setObjectName("btn_success")
@@ -3706,6 +3760,7 @@ class SettingsPage(QWidget):
         db.set_setting("tax_rate", str(self.tax_spin.value()))
         db.set_setting("alarm_enabled", "true" if self.alarm_cb.isChecked() else "false")
         db.set_setting("auto_backup", "true" if self.auto_backup_cb.isChecked() else "false")
+        db.set_setting("notif_sound", "true" if self.notif_sound_cb.isChecked() else "false")
         log("تعديل الإعدادات")
         QMessageBox.information(self, "تم", "تم حفظ الإعدادات بنجاح")
 
@@ -3757,14 +3812,22 @@ class AlarmManager(QObject):
             self.critical_signal.emit(new_critical)
             for r in new_critical:
                 self._notified_ids.add(r['id'])
+                insights = db.get_product_purchase_insights(r['id'])
+                msg = f"الكمية: {r['quantity']:.0f}"
+                if insights:
+                    msg += f" | المورد المقترح: {insights['supplier_name']} | السعر: {insights['unit_price']:.2f}"
                 db.execute("INSERT INTO notifications (title, message, type) VALUES (?,?,?)",
-                           (f"⚠ مخزون حرج: {r['name']}", f"الكمية: {r['quantity']:.0f}", "critical"))
+                           (f"🚨 مخزون حرج: {r['name']}", msg, "critical"))
         if new_warning:
             self.warning_signal.emit(new_warning)
             for r in new_warning:
                 self._notified_ids.add(r['id'])
+                insights = db.get_product_purchase_insights(r['id'])
+                msg = f"الكمية: {r['quantity']:.0f}"
+                if insights:
+                    msg += f" | المورد المقترح: {insights['supplier_name']}"
                 db.execute("INSERT INTO notifications (title, message, type) VALUES (?,?,?)",
-                           (f"⚠ تنبيه مخزون: {r['name']}", f"الكمية: {r['quantity']:.0f}", "warning"))
+                           (f"⚠️ تنبيه مخزون: {r['name']}", msg, "warning"))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -3852,10 +3915,12 @@ class MainWindow(QMainWindow):
         ul = QHBoxLayout(ua)
         ul.setContentsMargins(12, 8, 12, 8)
         ul.setSpacing(10)
-        avatar = QLabel(self.user.get('full_name', 'م')[0].upper())
+        name_initial = self.user.get('full_name', 'م')
+        if not name_initial: name_initial = 'م'
+        avatar = QLabel(name_initial[0].upper())
         avatar.setFixedSize(40, 40)
         avatar.setAlignment(Qt.AlignCenter)
-        avatar.setStyleSheet(f"background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 {COLORS['accent']}, stop:1 #0369A1); border-radius: 20px; color: white; font-size: 16px; font-weight: 800;")
+        avatar.setStyleSheet(f"background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 {COLORS['accent']}, stop:1 {COLORS['accent2']}); border-radius: 20px; color: white; font-size: 16px; font-weight: 800;")
         ui2 = QVBoxLayout(); ui2.setSpacing(2)
         nl = QLabel(self.user.get('full_name', self.user.get('username', 'User')))
         nl.setStyleSheet(f"color: {COLORS['text_primary']}; font-size: 12px; font-weight: 600;")
