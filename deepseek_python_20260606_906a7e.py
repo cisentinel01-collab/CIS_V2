@@ -62,6 +62,7 @@ APP_TITLE = f"{COMPANY_NAME}\nنظام إدارة المخازن المؤسسي"
 AR = {
     "dashboard": "لوحة التحكم",
     "products": "المنتجات",
+    "categories": "الفئات",
     "warehouses": "المخازن",
     "suppliers": "الموردين",
     "stock_in": "إضافة للمخزون",
@@ -108,28 +109,29 @@ AR = {
 # THEME
 # ─────────────────────────────────────────────────────────────────────────────
 COLORS = {
-    "bg_dark":       "#05070A",
-    "bg_nav":        "#0C0E14",
-    "bg_card":       "#0C0E14",
-    "bg_card2":      "#141820",
-    "accent":        "#C0A060",  # Gold for a premium feel
-    "accent2":       "#907040",
-    "accent_green":  "#10B981",
-    "accent_red":    "#EF4444",
-    "accent_orange": "#F59E0B",
-    "accent_purple": "#8B5CF6",
-    "text_primary":  "#F1F5F9",
-    "text_secondary":"#94A3B8",
-    "text_muted":    "#64748B",
-    "border":        "#1E293B",
-    "border2":       "#334155",
-    "hover":         "rgba(192, 160, 96, 0.1)",
-    "selected":      "rgba(192, 160, 96, 0.2)",
-    "glass":         "rgba(255, 255, 255, 0.03)",
-    "warning_bg":    "#451A03",
-    "critical_bg":   "#450A0A",
-    "row_warning":   "#2D1B02",
-    "row_critical":  "#1A0505",
+    "bg_dark":       "#F8FAFC", # Slate-50 (Neutral Balanced)
+    "bg_nav":        "#FFFFFF", # White
+    "bg_card":       "#FFFFFF", # White
+    "bg_card2":      "#E2E8F0", # Slate-200
+    "accent":        "#2563EB", # Modern Blue
+    "accent2":       "#1D4ED8",
+    "accent_green":  "#059669",
+    "accent_red":    "#DC2626",
+    "accent_orange": "#D97706",
+    "accent_purple": "#7C3AED",
+    "text_primary":  "#1E293B", # Slate-800
+    "text_secondary":"#475569", # Slate-600
+    "text_muted":    "#94A3B8", # Slate-400
+    "border":        "#E2E8F0", # Slate-200
+    "border2":       "#CBD5E1", # Slate-300
+    "hover":         "rgba(37, 99, 235, 0.08)",
+    "selected":      "rgba(37, 99, 235, 0.15)",
+    "glass":         "rgba(255, 255, 255, 0.7)",
+    "warning_bg":    "#FEF3C7",
+    "critical_bg":   "#FEE2E2",
+    "row_warning":   "#FFFBEB",
+    "row_critical":  "#FEF2F2",
+    "sidebar_hover": "#F1F5F9",
 }
 
 STYLESHEET = f"""
@@ -188,18 +190,17 @@ QPushButton#btn_flat:hover {{
     border-color: {COLORS['accent']};
 }}
 QLineEdit, QTextEdit, QPlainTextEdit, QDoubleSpinBox, QDateEdit, QSpinBox {{
-    background-color: {COLORS['bg_card2']};
+    background-color: #FFFFFF;
     color: {COLORS['text_primary']};
-    border: 1px solid {COLORS['border2']};
-    border-radius: 12px;
-    padding: 12px 18px;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    padding: 10px 15px;
     font-size: 14px;
     selection-background-color: {COLORS['accent']};
-    selection-color: {COLORS['bg_dark']};
 }}
-QLineEdit:focus, QTextEdit:focus, QDoubleSpinBox:focus {{
-    border: 1px solid {COLORS['accent']};
-    background-color: {COLORS['bg_dark']};
+QLineEdit:focus, QTextEdit:focus, QDoubleSpinBox:focus, QDateEdit:focus {{
+    border: 2px solid {COLORS['accent']};
+    background-color: #FFFFFF;
 }}
 QComboBox {{
     background-color: {COLORS['bg_card2']};
@@ -223,17 +224,17 @@ QTableWidget {{
     color: {COLORS['text_primary']};
     border: 1px solid {COLORS['border2']};
     border-radius: 12px;
-    gridline-color: {COLORS['border2']};
+    gridline-color: {COLORS['bg_dark']};
     selection-background-color: {COLORS['selected']};
-    alternate-background-color: {COLORS['bg_dark']};
+    alternate-background-color: #F8FAFC;
 }}
 QHeaderView::section {{
-    background-color: {COLORS['bg_nav']};
-    color: {COLORS['accent']};
-    font-weight: 800;
+    background-color: {COLORS['bg_dark']};
+    color: {COLORS['text_secondary']};
+    font-weight: 700;
     padding: 12px;
     border: none;
-    border-bottom: 2px solid {COLORS['accent']};
+    border-bottom: 1px solid {COLORS['border2']};
 }}
 QScrollBar:vertical {{
     background: transparent; width: 10px; border-radius: 5px;
@@ -914,6 +915,92 @@ def log(action, table="", record_id=None, details=""):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# CATEGORIES PAGE
+# ─────────────────────────────────────────────────────────────────────────────
+class CategoryDialog(QDialog):
+    def __init__(self, parent=None, category=None):
+        super().__init__(parent)
+        self.category = category
+        self.setWindowTitle("إضافة فئة" if not category else "تعديل فئة")
+        self.setMinimumWidth(400)
+        self.setup_ui()
+
+    def setup_ui(self):
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(24, 20, 24, 20)
+        lay.setSpacing(12)
+        form = QFormLayout()
+        self.name_edit = QLineEdit()
+        self.desc_edit = QTextEdit(); self.desc_edit.setFixedHeight(80)
+        form.addRow("اسم الفئة *:", self.name_edit)
+        form.addRow("الوصف:", self.desc_edit)
+        lay.addLayout(form)
+        if self.category:
+            self.name_edit.setText(self.category['name'])
+            self.desc_edit.setText(self.category.get('description') or "")
+        btns = QHBoxLayout(); btns.addStretch()
+        cb = QPushButton("إلغاء"); cb.setObjectName("btn_flat"); cb.clicked.connect(self.reject)
+        sb = QPushButton("💾 حفظ"); sb.setObjectName("btn_success"); sb.clicked.connect(self.save)
+        btns.addWidget(cb); btns.addWidget(sb)
+        lay.addLayout(btns)
+
+    def save(self):
+        name = self.name_edit.text().strip()
+        if not name: return
+        if self.category:
+            db.execute("UPDATE categories SET name=?, description=? WHERE id=?", (name, self.desc_edit.toPlainText(), self.category['id']))
+        else:
+            db.execute("INSERT INTO categories (name, description) VALUES (?,?)", (name, self.desc_edit.toPlainText()))
+        self.accept()
+
+class CategoriesPage(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setup_ui()
+
+    def setup_ui(self):
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(24, 20, 24, 20)
+        hdr = QHBoxLayout()
+        title = QLabel("📂 الفئات")
+        title.setStyleSheet(f"font-size: 22px; font-weight: 800; color: {COLORS['text_primary']};")
+        hdr.addWidget(title); hdr.addStretch()
+        add_btn = QPushButton("➕ إضافة فئة"); add_btn.setObjectName("btn_success")
+        add_btn.clicked.connect(self.add_category)
+        hdr.addWidget(add_btn); lay.addLayout(hdr)
+        self.table = QTableWidget()
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels(["الاسم", "الوصف", "إجراءات"])
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        lay.addWidget(self.table)
+        self.load_data()
+
+    def load_data(self):
+        rows = db.fetchall("SELECT * FROM categories ORDER BY name")
+        self.table.setRowCount(len(rows))
+        for i, r in enumerate(rows):
+            self.table.setItem(i, 0, QTableWidgetItem(r['name']))
+            self.table.setItem(i, 1, QTableWidgetItem(r['description'] or ""))
+            bw = QWidget(); bl = QHBoxLayout(bw); bl.setContentsMargins(2,1,2,1)
+            eb = QPushButton("✏️"); eb.setFixedSize(28,26); eb.setObjectName("btn_flat")
+            eb.clicked.connect(lambda _, row=dict(r): self.edit_category(row))
+            dbb = QPushButton("🗑"); dbb.setFixedSize(28,26); dbb.setObjectName("btn_danger")
+            dbb.clicked.connect(lambda _, row=dict(r): self.delete_category(row))
+            bl.addWidget(eb); bl.addWidget(dbb)
+            self.table.setCellWidget(i, 2, bw)
+
+    def add_category(self):
+        if CategoryDialog(self).exec() == QDialog.Accepted: self.load_data()
+
+    def edit_category(self, row):
+        if CategoryDialog(self, row).exec() == QDialog.Accepted: self.load_data()
+
+    def delete_category(self, row):
+        if QMessageBox.question(self, "تأكيد", f"حذف الفئة: {row['name']}؟") == QMessageBox.Yes:
+            db.execute("DELETE FROM categories WHERE id=?", (row['id'],))
+            self.load_data()
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PERMISSION HELPER
 # ─────────────────────────────────────────────────────────────────────────────
 ROLE_PERMISSIONS = {
@@ -1218,7 +1305,7 @@ class SidebarButton(QPushButton):
                 border-left: 3px solid transparent; border-radius: 0;
                 text-align: right; padding-right: 16px; font-size: 13px;
             }}
-            QPushButton:hover {{ background: {COLORS['bg_card2']}; color: {COLORS['text_primary']}; }}"""
+            QPushButton:hover {{ background: {COLORS['sidebar_hover']}; color: {COLORS['accent']}; }}"""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -4214,6 +4301,7 @@ class MainWindow(QMainWindow):
         nav_items = [
             ("🏠", AR['dashboard']),
             ("📦", AR['products']),
+            ("📂", AR['categories']),
             ("🏭", AR['warehouses']),
             ("🏢", AR['suppliers']),
             ("📥", AR['stock_in']),
@@ -4285,9 +4373,9 @@ class MainWindow(QMainWindow):
         tb_lay.addWidget(self.notif_badge)
 
         quick_add_btn = QPushButton("➕ إضافة سريعة")
-        quick_add_btn.setFixedSize(120, 34)
+        quick_add_btn.setFixedSize(130, 36)
         quick_add_btn.setObjectName("btn_success")
-        quick_add_btn.clicked.connect(lambda: self.navigate_to(4))
+        quick_add_btn.clicked.connect(lambda: self.navigate_to(5))
         tb_lay.addWidget(quick_add_btn)
 
         right_area.addWidget(topbar)
@@ -4299,6 +4387,7 @@ class MainWindow(QMainWindow):
         self.dashboard_page = DashboardPage()
         self.products_page = ProductsPage()
         self.products_page.stock_alert.connect(self.handle_stock_alert)
+        self.categories_page = CategoriesPage()
         self.warehouses_page = WarehousesPage()
         self.suppliers_page = SuppliersPage()
         self.stock_in_page = StockInPage()
@@ -4312,7 +4401,7 @@ class MainWindow(QMainWindow):
         self.users_page = UsersPage()
         self.settings_page = SettingsPage(self.user)
 
-        for page in [self.dashboard_page, self.products_page, self.warehouses_page,
+        for page in [self.dashboard_page, self.products_page, self.categories_page, self.warehouses_page,
                      self.suppliers_page, self.stock_in_page, self.stock_out_page,
                      self.transfers_page, self.reports_page, self.audit_page,
                      self.users_page, self.settings_page]:
@@ -4338,7 +4427,7 @@ class MainWindow(QMainWindow):
 
     def navigate_to(self, idx):
         self.stack.setCurrentIndex(idx)
-        titles = [AR['dashboard'], AR['products'], AR['warehouses'], AR['suppliers'],
+        titles = [AR['dashboard'], AR['products'], AR['categories'], AR['warehouses'], AR['suppliers'],
                   AR['stock_in'], AR['stock_out'], AR['transfers'], AR['reports'],
                   AR['audit'], AR['users'], AR['settings']]
         self.page_title_lbl.setText(titles[idx] if idx < len(titles) else "")
@@ -4348,8 +4437,9 @@ class MainWindow(QMainWindow):
         refresh_map = {
             0: lambda: self.dashboard_page.refresh_data(),
             1: lambda: self.products_page.load_products(),
-            2: lambda: self.warehouses_page.load_data(),
-            3: lambda: self.suppliers_page.load_data(),
+            2: lambda: self.categories_page.load_data(),
+            3: lambda: self.warehouses_page.load_data(),
+            4: lambda: self.suppliers_page.load_data(),
         }
         if idx in refresh_map:
             refresh_map[idx]()
@@ -4400,8 +4490,10 @@ class MainWindow(QMainWindow):
     def global_search(self, text):
         if not text.strip():
             return
+        # Navigate to Products Page
         self.navigate_to(1)
         self.products_page.search_edit.setText(text)
+        self.products_page.load_products()
 
     def logout(self):
         reply = QMessageBox.question(self, "تسجيل الخروج",
