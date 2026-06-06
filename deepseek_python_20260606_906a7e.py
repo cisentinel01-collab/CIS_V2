@@ -110,21 +110,21 @@ AR = {
 # THEME
 # ─────────────────────────────────────────────────────────────────────────────
 COLORS = {
-    "bg_primary":    "#F6F8FB",
+    "bg_primary":    "#F3F4F6", # Light Gray requested
     "white":         "#FFFFFF",
-    "sidebar":       "#0F172A",
-    "panel":         "#1E293B",
-    "accent":        "#2563EB",
+    "sidebar":       "#1E3A8A", # Deep Blue requested
+    "panel":         "#F9FAFB",
+    "accent":        "#1E3A8A", # Accent also uses Deep Blue
     "success":       "#10B981",
     "warning":       "#F59E0B",
     "danger":        "#EF4444",
     "purple":        "#8B5CF6",
-    "text_main":     "#0F172A",
-    "text_sub":      "#64748B",
-    "border":        "#E2E8F0",
-    "shadow":        "rgba(15, 23, 42, 0.08)",
-    "glass":         "rgba(255, 255, 255, 0.65)",
-    "glow":          "rgba(37, 99, 235, 0.3)",
+    "text_main":     "#111827",
+    "text_sub":      "#4B5563",
+    "border":        "#D1D5DB",
+    "shadow":        "rgba(0, 0, 0, 0.1)",
+    "glass":         "rgba(255, 255, 255, 0.8)",
+    "glow":          "rgba(30, 58, 138, 0.2)",
 }
 
 # Legacy mapping to avoid breakage during transition
@@ -204,16 +204,19 @@ QPushButton#btn_flat:hover {{
 }}
 QLineEdit, QTextEdit, QPlainTextEdit, QDoubleSpinBox, QDateEdit, QSpinBox {{
     background-color: #FFFFFF;
-    color: {COLORS['text_main']};
-    border: 1px solid {COLORS['border']};
-    border-radius: 12px;
-    padding: 12px 18px;
-    font-size: 14px;
-    selection-background-color: {COLORS['accent']};
+    color: #111827;
+    border: 2px solid #D1D5DB;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 15px;
+    font-weight: 500;
+    selection-background-color: #1E3A8A;
+    selection-color: #FFFFFF;
 }}
 QLineEdit:focus, QTextEdit:focus, QDoubleSpinBox:focus, QDateEdit:focus {{
-    border: 2px solid {COLORS['accent']};
+    border: 2px solid #1E3A8A;
     background-color: #FFFFFF;
+    outline: none;
 }}
 QComboBox {{
     background-color: {COLORS['bg_card2']};
@@ -273,8 +276,8 @@ QTabBar::tab {{
 QTabBar::tab:selected {{ background-color: {COLORS['bg_card']}; color: {COLORS['accent']}; }}
 QFrame#card {{
     background-color: {COLORS['white']};
-    border: 1px solid {COLORS['border']};
-    border-radius: 18px;
+        border: 2px solid #E5E7EB;
+        border-radius: 12px;
 }}
 QFrame#glass_card {{
     background-color: {COLORS['glass']};
@@ -1411,14 +1414,14 @@ class StatCard(QFrame):
 
     def _setup(self, title, value, icon, color):
         lay = QVBoxLayout(self)
-        lay.setContentsMargins(20, 20, 20, 20)
-        lay.setSpacing(10)
+        lay.setContentsMargins(25, 25, 25, 25)
+        lay.setSpacing(15)
 
         top = QHBoxLayout()
         icon_lbl = QLabel(icon)
-        icon_lbl.setFixedSize(44, 44)
+        icon_lbl.setFixedSize(50, 50)
         icon_lbl.setAlignment(Qt.AlignCenter)
-        icon_lbl.setStyleSheet(f"background: {color}15; color: {color}; border-radius: 12px; font-size: 20px;")
+        icon_lbl.setStyleSheet(f"background: #F3F4F6; color: #1E3A8A; border: 2px solid #D1D5DB; border-radius: 12px; font-size: 22px;")
 
         info = QVBoxLayout()
         info.setSpacing(2)
@@ -1446,12 +1449,11 @@ class StatCard(QFrame):
 
         self.setStyleSheet(f"""
             QFrame#card {{
-                background: white; border: 1px solid {COLORS['border']};
-                border-radius: 18px;
+                background: white; border: 2px solid #E5E7EB;
+                border-radius: 12px;
             }}
             QFrame#card:hover {{
-                border-color: {color};
-                background: {COLORS['bg_primary']};
+                border-color: #1E3A8A;
             }}
         """)
 
@@ -4727,7 +4729,7 @@ class MainWindow(QMainWindow):
         global_search.setPlaceholderText("🔍  بحث سريع في النظام...")
         global_search.setFixedWidth(300)
         global_search.setFixedHeight(40)
-        global_search.setStyleSheet(f"background: #F1F5F9; border-radius: 20px; border: 1px solid {COLORS['border']}; padding: 0 20px; color: {COLORS['text_main']};")
+        global_search.setStyleSheet(f"background: #FFFFFF; border-radius: 20px; border: 2px solid #D1D5DB; padding: 0 20px; color: #111827; font-weight: 500;")
         global_search.returnPressed.connect(lambda: self.global_search(global_search.text()))
         tb_lay.addWidget(global_search)
 
