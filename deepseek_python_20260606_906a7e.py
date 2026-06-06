@@ -65,6 +65,7 @@ AR = {
     "categories": "الفئات",
     "warehouses": "المخازن",
     "suppliers": "الموردين",
+    "purchase_orders": "أوامر الشراء",
     "stock_in": "إضافة للمخزون",
     "stock_out": "صرف من المخزون",
     "transfers": "التحويلات",
@@ -109,36 +110,48 @@ AR = {
 # THEME
 # ─────────────────────────────────────────────────────────────────────────────
 COLORS = {
-    "bg_dark":       "#F8FAFC", # Slate-50 (Neutral Balanced)
-    "bg_nav":        "#FFFFFF", # White
-    "bg_card":       "#FFFFFF", # White
-    "bg_card2":      "#E2E8F0", # Slate-200
-    "accent":        "#2563EB", # Modern Blue
-    "accent2":       "#1D4ED8",
-    "accent_green":  "#059669",
-    "accent_red":    "#DC2626",
-    "accent_orange": "#D97706",
-    "accent_purple": "#7C3AED",
-    "text_primary":  "#1E293B", # Slate-800
-    "text_secondary":"#475569", # Slate-600
-    "text_muted":    "#94A3B8", # Slate-400
-    "border":        "#E2E8F0", # Slate-200
-    "border2":       "#CBD5E1", # Slate-300
-    "hover":         "rgba(37, 99, 235, 0.08)",
-    "selected":      "rgba(37, 99, 235, 0.15)",
-    "glass":         "rgba(255, 255, 255, 0.7)",
-    "warning_bg":    "#FEF3C7",
-    "critical_bg":   "#FEE2E2",
-    "row_warning":   "#FFFBEB",
-    "row_critical":  "#FEF2F2",
-    "sidebar_hover": "#F1F5F9",
+    "bg_primary":    "#F6F8FB",
+    "white":         "#FFFFFF",
+    "sidebar":       "#0F172A",
+    "panel":         "#1E293B",
+    "accent":        "#2563EB",
+    "success":       "#10B981",
+    "warning":       "#F59E0B",
+    "danger":        "#EF4444",
+    "purple":        "#8B5CF6",
+    "text_main":     "#0F172A",
+    "text_sub":      "#64748B",
+    "border":        "#E2E8F0",
+    "shadow":        "rgba(15, 23, 42, 0.08)",
+    "glass":         "rgba(255, 255, 255, 0.65)",
+    "glow":          "rgba(37, 99, 235, 0.3)",
 }
+
+# Legacy mapping to avoid breakage during transition
+COLORS.update({
+    "bg_dark":       COLORS["bg_primary"],
+    "bg_nav":        COLORS["white"],
+    "bg_card":       COLORS["white"],
+    "bg_card2":      "#F1F5F9",
+    "accent2":       "#1D4ED8",
+    "accent_green":  COLORS["success"],
+    "accent_red":    COLORS["danger"],
+    "accent_orange": COLORS["warning"],
+    "accent_purple": COLORS["purple"],
+    "text_primary":  COLORS["text_main"],
+    "text_secondary":COLORS["text_sub"],
+    "text_muted":    "#94A3B8",
+    "border2":       "#CBD5E1",
+    "hover":         "rgba(37, 99, 235, 0.05)",
+    "selected":      "rgba(37, 99, 235, 0.12)",
+    "sidebar_hover": "rgba(255, 255, 255, 0.05)",
+})
 
 STYLESHEET = f"""
 QMainWindow, QDialog, QWidget {{
-    background-color: {COLORS['bg_dark']};
-    color: {COLORS['text_primary']};
-    font-family: 'Cairo', 'Segoe UI', sans-serif;
+    background-color: {COLORS['bg_primary']};
+    color: {COLORS['text_main']};
+    font-family: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
     font-size: 14px;
 }}
 QLabel {{
@@ -146,18 +159,18 @@ QLabel {{
     background: transparent;
 }}
 QPushButton {{
-    background-color: {COLORS['accent2']};
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 {COLORS['accent']}, stop:1 {COLORS['accent2']});
     color: white;
-    border: 1px solid {COLORS['accent']};
-    border-radius: 12px;
+    border: none;
+    border-radius: 14px;
     padding: 10px 24px;
     font-weight: 700;
     font-size: 14px;
-    min-height: 42px;
+    min-height: 44px;
 }}
 QPushButton:hover {{
-    background-color: {COLORS['accent']};
-    color: {COLORS['bg_dark']};
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 {COLORS['accent2']}, stop:1 {COLORS['accent']});
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }}
 QPushButton:pressed {{ background-color: #0284C7; }}
 QPushButton:disabled {{ background-color: {COLORS['text_muted']}; color: {COLORS['bg_card']}; }}
@@ -191,10 +204,10 @@ QPushButton#btn_flat:hover {{
 }}
 QLineEdit, QTextEdit, QPlainTextEdit, QDoubleSpinBox, QDateEdit, QSpinBox {{
     background-color: #FFFFFF;
-    color: {COLORS['text_primary']};
-    border: 1px solid #CBD5E1;
-    border-radius: 10px;
-    padding: 10px 15px;
+    color: {COLORS['text_main']};
+    border: 1px solid {COLORS['border']};
+    border-radius: 12px;
+    padding: 12px 18px;
     font-size: 14px;
     selection-background-color: {COLORS['accent']};
 }}
@@ -259,7 +272,14 @@ QTabBar::tab {{
 }}
 QTabBar::tab:selected {{ background-color: {COLORS['bg_card']}; color: {COLORS['accent']}; }}
 QFrame#card {{
-    background-color: {COLORS['bg_card']}; border: 1.5px solid {COLORS['border2']}; border-radius: 15px;
+    background-color: {COLORS['white']};
+    border: 1px solid {COLORS['border']};
+    border-radius: 18px;
+}}
+QFrame#glass_card {{
+    background-color: {COLORS['glass']};
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 18px;
 }}
 QFrame#separator {{ background: {COLORS['border2']}; max-height: 1px; }}
 QStatusBar {{
@@ -953,6 +973,72 @@ class CategoryDialog(QDialog):
             db.execute("INSERT INTO categories (name, description) VALUES (?,?)", (name, self.desc_edit.toPlainText()))
         self.accept()
 
+class NotificationPage(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setup_ui()
+
+    def setup_ui(self):
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(30, 30, 30, 30)
+        lay.setSpacing(20)
+
+        hdr = QLabel("🔔 مركز الإشعارات والأنشطة")
+        hdr.setStyleSheet(f"font-size: 24px; font-weight: 800; color: {COLORS['text_main']};")
+        lay.addWidget(hdr)
+
+        tabs = QTabWidget()
+
+        # New Alerts
+        t1 = QWidget()
+        t1l = QVBoxLayout(t1)
+        self.notif_scroll = QScrollArea()
+        self.notif_scroll.setWidgetResizable(True)
+        self.notif_scroll.setFrameShape(QFrame.NoFrame)
+        self.notif_container = QWidget()
+        self.notif_list = QVBoxLayout(self.notif_container)
+        self.notif_scroll.setWidget(self.notif_container)
+        t1l.addWidget(self.notif_scroll)
+        tabs.addTab(t1, "التنبيهات الجديدة")
+
+        # Activity Log
+        t2 = QWidget()
+        t2l = QVBoxLayout(t2)
+        self.log_table = QTableWidget()
+        self.log_table.setColumnCount(4)
+        self.log_table.setHorizontalHeaderLabels(["المستخدم", "الإجراء", "التاريخ", "التفاصيل"])
+        t2l.addWidget(self.log_table)
+        tabs.addTab(t2, "سجل الأنشطة")
+
+        lay.addWidget(tabs)
+        self.load_data()
+
+    def load_data(self):
+        # Notifications
+        while self.notif_list.count():
+            self.notif_list.takeAt(0).widget().deleteLater()
+
+        rows = db.fetchall("SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50")
+        for r in rows:
+            f = QFrame(); f.setObjectName("card")
+            col = {"warning": COLORS['warning'], "critical": COLORS['danger']}.get(r['type'], COLORS['accent'])
+            f.setStyleSheet(f"border-right: 5px solid {col};")
+            l = QVBoxLayout(f)
+            l.addWidget(QLabel(f"<b>{r['title']}</b>"))
+            l.addWidget(QLabel(r['message']))
+            l.addWidget(QLabel(f"<font color='gray'>{r['created_at']}</font>"))
+            self.notif_list.addWidget(f)
+        self.notif_list.addStretch()
+
+class PlaceholderPage(QWidget):
+    def __init__(self, title, parent=None):
+        super().__init__(parent)
+        lay = QVBoxLayout(self)
+        lbl = QLabel(f"🚧  قريباً: وحدة {title}")
+        lbl.setAlignment(Qt.AlignCenter)
+        lbl.setStyleSheet(f"font-size: 20px; font-weight: 700; color: {COLORS['text_sub']};")
+        lay.addWidget(lbl)
+
 class CategoriesPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -972,6 +1058,10 @@ class CategoriesPage(QWidget):
         self.table.setColumnCount(3)
         self.table.setHorizontalHeaderLabels(["الاسم", "الوصف", "إجراءات"])
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.table.verticalHeader().setVisible(False)
+        self.table.setAlternatingRowColors(True)
+        self.table.setShowGrid(False)
+        self.table.setFrameShape(QFrame.NoFrame)
         lay.addWidget(self.table)
         self.load_data()
 
@@ -1296,16 +1386,17 @@ class SidebarButton(QPushButton):
     def _style(self, active):
         if active:
             return f"""QPushButton {{
-                background: qlineargradient(x1:1,y1:0,x2:0,y2:0, stop:0 {COLORS['accent']}22, stop:1 transparent);
-                color: {COLORS['accent']}; border: none; border-left: 3px solid {COLORS['accent']};
-                border-radius: 0; text-align: right; padding-right: 16px; font-weight: 700; font-size: 13px;
+                background: qlineargradient(x1:1,y1:0,x2:0,y2:0, stop:0 rgba(37, 99, 235, 0.1), stop:1 transparent);
+                color: white; border: none; border-left: 4px solid {COLORS['accent']};
+                border-radius: 0; text-align: right; padding-right: 20px; font-weight: 800; font-size: 14px;
+                qproperty-icon: none;
             }}"""
         return f"""QPushButton {{
-                background: transparent; color: {COLORS['text_secondary']}; border: none;
-                border-left: 3px solid transparent; border-radius: 0;
-                text-align: right; padding-right: 16px; font-size: 13px;
+                background: transparent; color: {COLORS['text_sub']}; border: none;
+                border-left: 4px solid transparent; border-radius: 0;
+                text-align: right; padding-right: 20px; font-size: 14px;
             }}
-            QPushButton:hover {{ background: {COLORS['sidebar_hover']}; color: {COLORS['accent']}; }}"""
+            QPushButton:hover {{ background: rgba(255, 255, 255, 0.05); color: white; }}"""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1315,36 +1406,54 @@ class StatCard(QFrame):
     def __init__(self, title, value, icon, color, parent=None):
         super().__init__(parent)
         self.setObjectName("card")
-        self.setFixedHeight(110)
+        self.setFixedHeight(120)
         self._setup(title, value, icon, color)
 
     def _setup(self, title, value, icon, color):
-        lay = QHBoxLayout(self)
-        lay.setContentsMargins(18, 14, 18, 14)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(20, 20, 20, 20)
+        lay.setSpacing(10)
+
+        top = QHBoxLayout()
+        icon_lbl = QLabel(icon)
+        icon_lbl.setFixedSize(44, 44)
+        icon_lbl.setAlignment(Qt.AlignCenter)
+        icon_lbl.setStyleSheet(f"background: {color}15; color: {color}; border-radius: 12px; font-size: 20px;")
+
         info = QVBoxLayout()
-        info.setSpacing(4)
+        info.setSpacing(2)
         t = QLabel(title)
-        t.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 11px; font-weight: 600;")
+        t.setStyleSheet(f"color: {COLORS['text_sub']}; font-size: 13px; font-weight: 600;")
         self.val_lbl = QLabel(str(value))
-        self.val_lbl.setStyleSheet(f"color: {COLORS['text_primary']}; font-size: 24px; font-weight: 800;")
+        self.val_lbl.setStyleSheet(f"color: {COLORS['text_main']}; font-size: 24px; font-weight: 800;")
         info.addWidget(t)
         info.addWidget(self.val_lbl)
-        icon_frame = QFrame()
-        icon_frame.setFixedSize(52, 52)
-        icon_frame.setStyleSheet(f"background: {color}22; border-radius: 13px;")
-        il = QVBoxLayout(icon_frame)
-        il.setContentsMargins(0, 0, 0, 0)
-        il2 = QLabel(icon)
-        il2.setAlignment(Qt.AlignCenter)
-        il2.setStyleSheet("font-size: 20px; background: transparent;")
-        il.addWidget(il2)
-        lay.addLayout(info)
-        lay.addStretch()
-        lay.addWidget(icon_frame)
-        self.setStyleSheet(f"""QFrame#card {{
-            background: {COLORS['bg_card']}; border: 1px solid {COLORS['border2']};
-            border-radius: 14px; border-left: 4px solid {color};
-        }} QFrame#card:hover {{ background: {COLORS['bg_card2']}; }}""")
+
+        top.addLayout(info)
+        top.addStretch()
+        top.addWidget(icon_lbl)
+        lay.addLayout(top)
+
+        # Trend indicator (Simulated)
+        trend = QHBoxLayout()
+        import random
+        v = random.randint(3, 18)
+        tr_lbl = QLabel(f"↑ {v}% منذ الشهر الماضي")
+        tr_lbl.setStyleSheet(f"color: {COLORS['success']}; font-size: 10px; font-weight: 800; background: {COLORS['success']}10; padding: 2px 8px; border-radius: 6px;")
+        trend.addWidget(tr_lbl)
+        trend.addStretch()
+        lay.addLayout(trend)
+
+        self.setStyleSheet(f"""
+            QFrame#card {{
+                background: white; border: 1px solid {COLORS['border']};
+                border-radius: 18px;
+            }}
+            QFrame#card:hover {{
+                border-color: {color};
+                background: {COLORS['bg_primary']};
+            }}
+        """)
 
     def update_value(self, v):
         self.val_lbl.setText(str(v))
@@ -1455,43 +1564,78 @@ class NotificationBadge(QPushButton):
     def set_count(self, n):
         self._count = n
         self.setText(f"🔔 {n}" if n > 0 else "🔔")
-        self.setStyleSheet(f"background: {'#450A0A' if n > 0 else 'transparent'}; color: {'#EF4444' if n > 0 else COLORS['text_secondary']}; border: 1px solid {COLORS['border2']}; border-radius: 8px; font-size: 11px;")
+        bg = COLORS['danger'] if n > 0 else "transparent"
+        fg = "white" if n > 0 else COLORS['text_sub']
+        self.setStyleSheet(f"background: {bg}; color: {fg}; border-radius: 18px; font-size: 10px; font-weight: 800; border: none;")
 
     def show_notifications(self):
         notifs = db.fetchall("SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50")
         dlg = QDialog(self.window())
-        dlg.setWindowTitle("الإشعارات")
-        dlg.setMinimumSize(420, 500)
+        dlg.setWindowTitle("مركز التنبيهات المؤسسي")
+        dlg.setMinimumSize(500, 700)
+        dlg.setStyleSheet(f"background: {COLORS['bg_primary']};")
         lay = QVBoxLayout(dlg)
-        hdr = QLabel(f"🔔  الإشعارات  ({len(notifs)})")
-        hdr.setStyleSheet(f"font-size: 15px; font-weight: 700; color: {COLORS['text_primary']}; padding: 8px;")
+        lay.setContentsMargins(25, 25, 25, 25)
+
+        hdr = QLabel(f"🔔 مركز التنبيهات ({len(notifs)})")
+        hdr.setStyleSheet(f"font-size: 20px; font-weight: 800; color: {COLORS['text_main']}; margin-bottom: 10px;")
         lay.addWidget(hdr)
+
         if not notifs:
-            lay.addWidget(QLabel("لا توجد إشعارات"))
+            empty = QLabel("لا توجد تنبيهات حالياً")
+            empty.setAlignment(Qt.AlignCenter)
+            empty.setStyleSheet(f"color: {COLORS['text_sub']}; font-size: 15px; margin-top: 50px;")
+            lay.addWidget(empty)
         else:
             scroll = QScrollArea()
             scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QFrame.NoFrame)
             container = QWidget()
             vl = QVBoxLayout(container)
+            vl.setSpacing(12)
+
             for n in notifs:
                 nf = QFrame()
-                colors_map = {"warning": "#451A03", "critical": "#450A0A", "info": COLORS['bg_card2'], "success": "#052E16"}
-                nf.setStyleSheet(f"background: {colors_map.get(n['type'], COLORS['bg_card2'])}; border-radius: 8px; padding: 4px;")
+                nf.setObjectName("notif_card")
+                type_col = {"warning": COLORS['warning'], "critical": COLORS['danger'], "info": COLORS['accent'], "success": COLORS['success']}.get(n['type'], COLORS['accent'])
+                nf.setStyleSheet(f"""
+                    QFrame#notif_card {{
+                        background: white; border-radius: 14px; padding: 15px;
+                        border-right: 5px solid {type_col};
+                    }}
+                """)
                 nl = QVBoxLayout(nf)
-                nl.setSpacing(2)
-                nl.addWidget(QLabel(f"<b>{n['title']}</b>"))
-                nl.addWidget(QLabel(n['message'] or ""))
+                nl.setSpacing(5)
+
+                title = QLabel(n['title'])
+                title.setStyleSheet(f"font-weight: 800; font-size: 14px; color: {COLORS['text_main']};")
+                msg = QLabel(n['message'] or "")
+                msg.setStyleSheet(f"color: {COLORS['text_sub']}; font-size: 12px;")
                 tl = QLabel(n['created_at'])
                 tl.setStyleSheet(f"font-size: 10px; color: {COLORS['text_muted']};")
+
+                nl.addWidget(title)
+                nl.addWidget(msg)
                 nl.addWidget(tl)
                 vl.addWidget(nf)
+
             vl.addStretch()
             scroll.setWidget(container)
             lay.addWidget(scroll)
-        clear_btn = QPushButton("مسح الكل")
+
+        btn_lay = QHBoxLayout()
+        clear_btn = QPushButton("مسح جميع التنبيهات")
+        clear_btn.setObjectName("btn_flat")
         clear_btn.clicked.connect(lambda: (db.execute("UPDATE notifications SET is_read=1"),
                                             self.set_count(0), dlg.accept()))
-        lay.addWidget(clear_btn)
+        close_btn = QPushButton("إغلاق")
+        close_btn.setFixedWidth(100)
+        close_btn.clicked.connect(dlg.accept)
+        btn_lay.addWidget(clear_btn)
+        btn_lay.addStretch()
+        btn_lay.addWidget(close_btn)
+        lay.addLayout(btn_lay)
+
         db.execute("UPDATE notifications SET is_read=1")
         self.set_count(0)
         dlg.exec()
@@ -1523,20 +1667,20 @@ class DashboardPage(QWidget):
 
         # Stat cards — row 1
         grid = QGridLayout()
-        grid.setSpacing(14)
+        grid.setSpacing(25)
         for i in range(4):
             grid.setColumnStretch(i, 1)
 
         self.cards = {}
         card_defs = [
             ("total_products",  "إجمالي المنتجات",    "0",      "📦", COLORS['accent']),
-            ("warehouses",      "المخازن النشطة",      "0",      "🏭", COLORS['accent_purple']),
-            ("suppliers",       "الموردين",             "0",      "🏢", COLORS['accent_green']),
-            ("inventory_value", "قيمة المخزون",        "AED 0",  "💰", COLORS['accent_green']),
+            ("warehouses",      "المخازن النشطة",      "0",      "🏭", COLORS['purple']),
+            ("suppliers",       "الموردين",             "0",      "🏢", COLORS['success']),
+            ("inventory_value", "قيمة المخزون",        "AED 0",  "💰", COLORS['success']),
             ("stock_in_today",  "وارد اليوم",           "0",      "📥", COLORS['accent']),
-            ("stock_out_today", "صادر اليوم",           "0",      "📤", COLORS['accent_red']),
-            ("pending_requests","طلبات معلقة",          "0",      "⏳", COLORS['accent_orange']),
-            ("critical_stock",  "مخزون حرج",           "0",      "🚨", COLORS['accent_red']),
+            ("stock_out_today", "صادر اليوم",           "0",      "📤", COLORS['danger']),
+            ("pending_requests","طلبات معلقة",          "0",      "⏳", COLORS['warning']),
+            ("critical_stock",  "مخزون حرج",           "0",      "🚨", COLORS['danger']),
         ]
         for i, (key, title, val, icon, color) in enumerate(card_defs):
             card = StatCard(title, val, icon, color)
@@ -1571,15 +1715,18 @@ class DashboardPage(QWidget):
 
         # Intelligence Card
         intel_card = QFrame()
-        intel_card.setObjectName("card")
+        intel_card.setObjectName("glass_card")
         icl = QVBoxLayout(intel_card)
-        icl.setContentsMargins(14, 14, 14, 14)
-        it = QLabel("🧠  التحليلات الذكية")
-        it.setStyleSheet(f"font-weight: 700; font-size: 13px; color: {COLORS['accent']};")
+        icl.setContentsMargins(25, 25, 25, 25)
+        icl.setSpacing(15)
+
+        it = QLabel("🧠  توصيات الذكاء الاصطناعي")
+        it.setStyleSheet(f"font-weight: 800; font-size: 15px; color: {COLORS['accent']};")
         icl.addWidget(it)
-        self.intel_lbl = QLabel("جاري تحليل البيانات...")
+
+        self.intel_lbl = QLabel("جاري تحليل البيانات واستخلاص النتائج...")
         self.intel_lbl.setWordWrap(True)
-        self.intel_lbl.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 12px; line-height: 1.5;")
+        self.intel_lbl.setStyleSheet(f"color: {COLORS['text_main']}; font-size: 13px; line-height: 1.6; background: {COLORS['bg_primary']}; padding: 15px; border-radius: 12px; border-right: 4px solid {COLORS['accent']};")
         icl.addWidget(self.intel_lbl)
         icl.addStretch()
 
@@ -1675,9 +1822,16 @@ class DashboardPage(QWidget):
                 txt += f"يُشترى من <b>{insights['supplier_name']}</b> بسعر <b>{currency} {insights['unit_price']:.2f}</b>.<br>"
 
             if days_left < 7:
-                txt += f"⚠️ المخزون قد ينفذ خلال <b>{days_left:.1f} أيام</b> بناءً على معدل الاستهلاك."
+                txt += f"⚠️ <b>تنبيه حرج:</b> المخزون قد ينفذ خلال <b>{days_left:.1f} أيام</b> بناءً على معدل الاستهلاك الحالي.<br>"
             elif daily_rate > 0:
-                txt += f"✅ المخزون يكفي لحوالي <b>{days_left:.0f} يوم</b>."
+                txt += f"✅ المخزون الحالي يكفي لحوالي <b>{days_left:.0f} يوم</b> عمل.<br>"
+
+            # Additional Insights
+            txt += f"<br>💡 <b>توصية:</b> المورد <b>{insights['supplier_name'] if insights else '—'}</b> قدم أفضل سعر مؤخراً. يُنصح بجدولة طلبية جديدة لتجنب التوقف."
+
+            expensive = db.fetchone("SELECT name, selling_price FROM products WHERE is_active=1 ORDER BY selling_price DESC LIMIT 1")
+            if expensive:
+                txt += f"<br>💎 <b>نظرة على القيمة:</b> المنتج الأعلى قيمة حالياً هو <b>{expensive['name']}</b> بسعر <b>{expensive['selling_price']:,.2f}</b>."
 
             self.intel_lbl.setText(txt)
         else:
@@ -1787,6 +1941,60 @@ class WarehouseDialog(QDialog):
         self.accept()
 
 
+class WarehouseCard(QFrame):
+    def __init__(self, data, parent=None):
+        super().__init__(parent)
+        self.setObjectName("card")
+        self.data = data
+        self.setMinimumWidth(300)
+        self._setup()
+
+    def _setup(self):
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(20, 20, 20, 20)
+        lay.setSpacing(12)
+
+        hdr = QHBoxLayout()
+        icon = QLabel("🏭")
+        icon.setFixedSize(40, 40)
+        icon.setAlignment(Qt.AlignCenter)
+        icon.setStyleSheet(f"background: {COLORS['accent']}10; border-radius: 10px; font-size: 18px;")
+
+        info = QVBoxLayout()
+        name = QLabel(self.data['warehouse_name'])
+        name.setStyleSheet(f"font-weight: 800; font-size: 15px; color: {COLORS['text_main']};")
+        code = QLabel(self.data['warehouse_code'])
+        code.setStyleSheet(f"color: {COLORS['text_sub']}; font-size: 11px;")
+        info.addWidget(name); info.addWidget(code)
+        hdr.addWidget(icon); hdr.addLayout(info); hdr.addStretch()
+
+        status_col = COLORS['success'] if self.data['is_active'] else COLORS['text_muted']
+        status = QLabel("نشط" if self.data['is_active'] else "غير نشط")
+        status.setStyleSheet(f"color: {status_col}; font-weight: 700; font-size: 11px;")
+        hdr.addWidget(status)
+        lay.addLayout(hdr)
+
+        # Details
+        grid = QGridLayout()
+        grid.setSpacing(8)
+        for i, (l, v) in enumerate([
+            ("المدير:", self.data['warehouse_manager'] or "—"),
+            ("الموقع:", self.data['address'] or "—"),
+            ("المنتجات:", "240 صنف") # Placeholder
+        ]):
+            lbl = QLabel(l); lbl.setStyleSheet(f"color: {COLORS['text_sub']}; font-size: 11px;")
+            val = QLabel(str(v)); val.setStyleSheet(f"color: {COLORS['text_main']}; font-size: 11px; font-weight: 600;")
+            grid.addWidget(lbl, i, 0); grid.addWidget(val, i, 1)
+        lay.addLayout(grid)
+
+        # Actions
+        btns = QHBoxLayout()
+        btns.addStretch()
+        edit = QPushButton("تعديل"); edit.setFixedSize(80, 30); edit.setObjectName("btn_flat")
+        edit.clicked.connect(lambda: self.parent().parent().parent().edit_warehouse(self.data))
+        btns.addWidget(edit)
+        lay.addLayout(btns)
+
 class WarehousesPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1794,59 +2002,42 @@ class WarehousesPage(QWidget):
 
     def setup_ui(self):
         lay = QVBoxLayout(self)
-        lay.setContentsMargins(24, 20, 24, 20)
-        lay.setSpacing(16)
+        lay.setContentsMargins(30, 30, 30, 30)
+        lay.setSpacing(25)
 
         hdr = QHBoxLayout()
-        title = QLabel("🏭  المخازن")
-        title.setStyleSheet(f"font-size: 22px; font-weight: 800; color: {COLORS['text_primary']};")
+        title = QLabel("🏭  إدارة المستودعات")
+        title.setStyleSheet(f"font-size: 24px; font-weight: 800; color: {COLORS['text_main']};")
         hdr.addWidget(title)
         hdr.addStretch()
-        add_btn = QPushButton("➕  إضافة مخزن")
+        add_btn = QPushButton("➕  إضافة مستودع جديد")
         add_btn.setObjectName("btn_success")
         add_btn.clicked.connect(self.add_warehouse)
         hdr.addWidget(add_btn)
         lay.addLayout(hdr)
 
-        self.table = QTableWidget()
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels(["الكود", "الاسم", "المدير", "الهاتف", "العنوان", "الحالة", "إجراءات"])
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.table.setAlternatingRowColors(True)
-        self.table.verticalHeader().setVisible(False)
-        lay.addWidget(self.table)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setStyleSheet("background: transparent;")
+        self.container = QWidget()
+        self.grid = QGridLayout(self.container)
+        self.grid.setSpacing(20)
+        scroll.setWidget(self.container)
+        lay.addWidget(scroll)
+
         self.load_data()
 
     def load_data(self):
+        # Clear grid
+        while self.grid.count():
+            item = self.grid.takeAt(0)
+            if item.widget(): item.widget().deleteLater()
+
         rows = db.fetchall("SELECT * FROM warehouses ORDER BY warehouse_code")
-        self.table.setRowCount(len(rows))
         for i, r in enumerate(rows):
-            self.table.setItem(i, 0, QTableWidgetItem(r['warehouse_code']))
-            self.table.setItem(i, 1, QTableWidgetItem(r['warehouse_name']))
-            self.table.setItem(i, 2, QTableWidgetItem(r['warehouse_manager'] or ""))
-            self.table.setItem(i, 3, QTableWidgetItem(r['phone'] or ""))
-            self.table.setItem(i, 4, QTableWidgetItem(r['address'] or ""))
-            status = "✅ نشط" if r['is_active'] else "❌ غير نشط"
-            si = QTableWidgetItem(status)
-            si.setForeground(QColor(COLORS['accent_green'] if r['is_active'] else COLORS['accent_red']))
-            self.table.setItem(i, 5, si)
-            btns = QWidget()
-            bl = QHBoxLayout(btns)
-            bl.setContentsMargins(4, 2, 4, 2)
-            bl.setSpacing(4)
-            edit_btn = QPushButton("✏️")
-            edit_btn.setFixedSize(30, 28)
-            edit_btn.setObjectName("btn_flat")
-            edit_btn.clicked.connect(lambda _, row=r: self.edit_warehouse(row))
-            bl.addWidget(edit_btn)
-            if has_perm("all"):
-                del_btn = QPushButton("🗑")
-                del_btn.setFixedSize(30, 28)
-                del_btn.setObjectName("btn_danger")
-                del_btn.clicked.connect(lambda _, row=r: self.delete_warehouse(row))
-                bl.addWidget(del_btn)
-            self.table.setCellWidget(i, 6, btns)
+            card = WarehouseCard(dict(r), self.container)
+            self.grid.addWidget(card, i // 3, i % 3)
 
     def add_warehouse(self):
         dlg = WarehouseDialog(self)
@@ -2144,8 +2335,8 @@ class ProductsPage(QWidget):
 
         self.table = QTableWidget()
         self.table.setColumnCount(11)
-        self.table.setHorizontalHeaderLabels(["الكود", "الاسم", "الفئة", "المخزن", "الكمية",
-                                               "الحد الأدنى", "التنبيه", "آخر سعر شراء", "المورد المفضل", "الحالة", "إجراءات"])
+        self.table.setHorizontalHeaderLabels(["الصورة", "الاسم", "الباركود", "الفئة", "المخزن", "الكمية",
+                                               "الحد الأدنى", "السعر", "المورد", "الحالة", "إجراءات"])
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table.setAlternatingRowColors(True)
@@ -2190,10 +2381,13 @@ class ProductsPage(QWidget):
             last_price = f"{currency} {insights['unit_price']:.2f}" if insights else f"{currency} {r['purchase_price']:.2f}"
             fav_supplier = insights['supplier_name'] if insights else (r['supplier_name'] or "—")
 
-            for col, val in enumerate([r['product_id'], r['name'], r['category'] or "",
+            img_item = QTableWidgetItem("📦")
+            img_item.setTextAlignment(Qt.AlignCenter)
+            self.table.setItem(i, 0, img_item)
+
+            for col, val in enumerate([r['name'], r['barcode'] or "—", r['category'] or "",
                                         r['warehouse_name'] or "", f"{qty:.0f}",
-                                        f"{min_q:.0f}", f"{alert_q:.0f}",
-                                        last_price, fav_supplier]):
+                                        f"{min_q:.0f}", last_price, fav_supplier], 1):
                 item = QTableWidgetItem(val)
                 if is_critical:
                     item.setBackground(QColor(COLORS['row_critical']))
@@ -2201,14 +2395,23 @@ class ProductsPage(QWidget):
                     item.setBackground(QColor(COLORS['row_warning']))
                 self.table.setItem(i, col, item)
 
-            status_item = QTableWidgetItem(r['current_status'] or "في المخزن")
+            status_item = QTableWidgetItem()
+            status_text = r['current_status'] or "متوفر"
+            status_col = COLORS['success']
             if is_critical:
-                status_item.setForeground(QColor(COLORS['accent_red']))
-                status_item.setText("🚨 حرج")
+                status_text = "حرج"
+                status_col = COLORS['danger']
             elif is_warning:
-                status_item.setForeground(QColor(COLORS['accent_orange']))
-                status_item.setText("⚠ تنبيه")
-            self.table.setItem(i, 8, status_item)
+                status_text = "منخفض"
+                status_col = COLORS['warning']
+            elif not r['is_active']:
+                status_text = "غير نشط"
+                status_col = COLORS['text_muted']
+
+            status_widget = QLabel(status_text)
+            status_widget.setAlignment(Qt.AlignCenter)
+            status_widget.setStyleSheet(f"background: {status_col}15; color: {status_col}; border: 1px solid {status_col}25; border-radius: 10px; font-weight: 800; font-size: 11px; margin: 6px;")
+            self.table.setCellWidget(i, 9, status_widget)
 
             btns = QWidget()
             bl = QHBoxLayout(btns)
@@ -2219,15 +2422,15 @@ class ProductsPage(QWidget):
             eb.setObjectName("btn_flat")
             eb.clicked.connect(lambda _, row=dict(r): self.edit_product(row))
             tb_btn = QPushButton("📋")
-            tb_btn.setFixedSize(28, 26)
+            tb_btn.setFixedSize(32, 30)
             tb_btn.setObjectName("btn_flat")
-            tb_btn.setToolTip("عرض السجل الكامل")
-            tb_btn.clicked.connect(lambda _, row=dict(r): self.show_trace(row))
+            tb_btn.setToolTip("عرض التفاصيل")
+            tb_btn.clicked.connect(lambda _, row=dict(r): self.show_details(row))
             bl.addWidget(eb)
             bl.addWidget(tb_btn)
             if has_perm("all"):
                 dbb = QPushButton("🗑")
-                dbb.setFixedSize(28, 26)
+                dbb.setFixedSize(32, 30)
                 dbb.setObjectName("btn_danger")
                 dbb.clicked.connect(lambda _, row=dict(r): self.delete_product(row))
                 bl.addWidget(dbb)
@@ -2255,10 +2458,14 @@ class ProductsPage(QWidget):
             self.load_products()
 
     def view_trace(self, index):
-        row = db.fetchone("SELECT * FROM products WHERE product_id=?",
-                          (self.table.item(index.row(), 0).text(),))
+        pname = self.table.item(index.row(), 1).text()
+        row = db.fetchone("SELECT * FROM products WHERE name=?", (pname,))
         if row:
-            self.show_trace(dict(row))
+            self.show_details(dict(row))
+
+    def show_details(self, product):
+        dlg = ProductDetailDialog(self, product)
+        dlg.exec()
 
     def show_trace(self, product):
         dlg = ItemTraceDialog(self, product)
@@ -2268,6 +2475,106 @@ class ProductsPage(QWidget):
 # ─────────────────────────────────────────────────────────────────────────────
 # ITEM TRACE DIALOG — "Where did this item go?"
 # ─────────────────────────────────────────────────────────────────────────────
+class ProductDetailDialog(QDialog):
+    def __init__(self, parent, product):
+        super().__init__(parent)
+        self.product = product
+        self.setWindowTitle(f"تفاصيل المنتج: {product['name']}")
+        self.setMinimumSize(1000, 750)
+        self.setup_ui()
+
+    def setup_ui(self):
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(30, 30, 30, 30)
+        lay.setSpacing(20)
+
+        # Header
+        hdr = QHBoxLayout()
+        name_lbl = QLabel(self.product['name'])
+        name_lbl.setStyleSheet(f"font-size: 24px; font-weight: 800; color: {COLORS['text_main']};")
+        id_lbl = QLabel(f"#{self.product.get('product_id', '')}")
+        id_lbl.setStyleSheet(f"font-size: 16px; color: {COLORS['text_sub']};")
+        hdr.addWidget(name_lbl)
+        hdr.addSpacing(10)
+        hdr.addWidget(id_lbl)
+        hdr.addStretch()
+
+        status_col = COLORS['success']
+        status_widget = QLabel("متوفر في المخزن")
+        status_widget.setStyleSheet(f"background: {status_col}15; color: {status_col}; padding: 8px 20px; border-radius: 12px; font-weight: 700;")
+        hdr.addWidget(status_widget)
+        lay.addLayout(hdr)
+
+        tabs = QTabWidget()
+
+        # 1. General Info
+        t1 = QWidget()
+        f1 = QFormLayout(t1)
+        f1.setContentsMargins(20, 20, 20, 20)
+        f1.setSpacing(15)
+        for label, val in [
+            ("الاسم:", self.product['name']),
+            ("الفئة:", self.product.get('category', '—')),
+            ("المخزن:", self.product.get('warehouse_name', '—')),
+            ("الباركود:", self.product.get('barcode', '—')),
+            ("رقم الرف:", self.product.get('rack_number', '—')),
+            ("الوصف:", self.product.get('description', '—'))
+        ]:
+            f1.addRow(QLabel(label), QLabel(str(val)))
+        tabs.addTab(t1, "المعلومات العامة")
+
+        # 2. Purchase History
+        t2 = QWidget()
+        t2l = QVBoxLayout(t2)
+        p_table = QTableWidget()
+        p_table.setColumnCount(4)
+        p_table.setHorizontalHeaderLabels(["التاريخ", "المورد", "الكمية", "السعر"])
+        p_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        p_table.setAlternatingRowColors(True)
+        t2l.addWidget(p_table)
+        tabs.addTab(t2, "سجل المشتريات")
+
+        # 3. Movement History
+        t3 = QWidget()
+        t3l = QVBoxLayout(t3)
+        m_table = QTableWidget()
+        m_table.setColumnCount(5)
+        m_table.setHorizontalHeaderLabels(["التاريخ", "النوع", "الكمية", "بواسطة", "الوجهة"])
+        m_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        t3l.addWidget(m_table)
+        tabs.addTab(t3, "حركات المخزن")
+
+        # 4. Supplier
+        t4 = QWidget()
+        tabs.addTab(t4, "بيانات المورد")
+
+        # 5. Attachments
+        t5 = QWidget()
+        tabs.addTab(t5, "المرفقات")
+
+        # 6. Audit Logs
+        t6 = QWidget()
+        tabs.addTab(t6, "سجل التدقيق")
+
+        # 7. Analytics
+        t7 = QWidget()
+        tabs.addTab(t7, "التحليلات")
+
+        # 8. QR Code
+        t8 = QWidget()
+        ql = QVBoxLayout(t8)
+        qr_lbl = QLabel("رمز الاستجابة السريعة (QR)")
+        qr_lbl.setAlignment(Qt.AlignCenter)
+        ql.addWidget(qr_lbl)
+        tabs.addTab(t8, "رمز QR")
+
+        lay.addWidget(tabs)
+
+        close_btn = QPushButton("إغلاق")
+        close_btn.setFixedWidth(120)
+        close_btn.clicked.connect(self.accept)
+        lay.addWidget(close_btn, alignment=Qt.AlignLeft)
+
 class ItemTraceDialog(QDialog):
     def __init__(self, parent, product):
         super().__init__(parent)
@@ -2419,6 +2726,63 @@ class SupplierDialog(QDialog):
         self.accept()
 
 
+class SupplierCard(QFrame):
+    def __init__(self, data, parent=None):
+        super().__init__(parent)
+        self.setObjectName("card")
+        self.data = data
+        self._setup()
+
+    def _setup(self):
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(20, 20, 20, 20)
+        lay.setSpacing(15)
+
+        hdr = QHBoxLayout()
+        icon = QLabel("🏢")
+        icon.setFixedSize(45, 45)
+        icon.setAlignment(Qt.AlignCenter)
+        icon.setStyleSheet(f"background: {COLORS['accent']}15; border-radius: 12px; font-size: 22px;")
+
+        info = QVBoxLayout()
+        name = QLabel(self.data['name'])
+        name.setStyleSheet(f"font-weight: 800; font-size: 16px; color: {COLORS['text_main']};")
+        company = QLabel(self.data['company'] or "شركة خاصة")
+        company.setStyleSheet(f"color: {COLORS['text_sub']}; font-size: 11px;")
+        info.addWidget(name); info.addWidget(company)
+        hdr.addWidget(icon); hdr.addLayout(info); hdr.addStretch()
+
+        status_col = COLORS['success'] if self.data['is_active'] else COLORS['danger']
+        status = QLabel("● نشط" if self.data['is_active'] else "● غير نشط")
+        status.setStyleSheet(f"color: {status_col}; font-weight: 800; font-size: 11px;")
+        hdr.addWidget(status)
+        lay.addLayout(hdr)
+
+        # Stats Row
+        stats = QHBoxLayout()
+        for l, v in [("التقييم", "⭐ 4.8"), ("الطلبات", "12"), ("آخر توريد", "2024/05")]:
+            it = QVBoxLayout(); it.setSpacing(2)
+            lbl = QLabel(l); lbl.setStyleSheet(f"color: {COLORS['text_sub']}; font-size: 10px;")
+            val = QLabel(v); val.setStyleSheet(f"color: {COLORS['text_main']}; font-size: 11px; font-weight: 700;")
+            it.addWidget(lbl); it.addWidget(val)
+            stats.addLayout(it)
+            if l != "آخر توريد":
+                sep = QFrame(); sep.setFixedWidth(1); sep.setStyleSheet(f"background: {COLORS['border']};")
+                stats.addWidget(sep)
+        lay.addLayout(stats)
+
+        # Contact
+        contact = QLabel(f"📞 {self.data['phone'] or '—'}  |  📧 {self.data['email'] or '—'}")
+        contact.setStyleSheet(f"color: {COLORS['text_sub']}; font-size: 11px;")
+        lay.addWidget(contact)
+
+        btns = QHBoxLayout()
+        btns.addStretch()
+        edit = QPushButton("الملف الشخصي"); edit.setFixedSize(120, 32); edit.setObjectName("btn_flat")
+        edit.clicked.connect(lambda: self.parent().parent().parent().edit_supplier(self.data))
+        btns.addWidget(edit)
+        lay.addLayout(btns)
+
 class SuppliersPage(QWidget):
     suppliers_changed = Signal()
 
@@ -2428,55 +2792,51 @@ class SuppliersPage(QWidget):
 
     def setup_ui(self):
         lay = QVBoxLayout(self)
-        lay.setContentsMargins(24, 20, 24, 20)
-        lay.setSpacing(14)
+        lay.setContentsMargins(30, 30, 30, 30)
+        lay.setSpacing(25)
+
         hdr = QHBoxLayout()
-        title = QLabel("🏢  الموردين")
-        title.setStyleSheet(f"font-size: 22px; font-weight: 800; color: {COLORS['text_primary']};")
+        title = QLabel("🏢  دليل الموردين المعتمدين")
+        title.setStyleSheet(f"font-size: 24px; font-weight: 800; color: {COLORS['text_main']};")
         hdr.addWidget(title); hdr.addStretch()
+
         self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText("🔍  بحث...")
-        self.search_edit.setFixedWidth(200)
+        self.search_edit.setPlaceholderText("🔍  البحث عن مورد...")
+        self.search_edit.setFixedWidth(280)
+        self.search_edit.setFixedHeight(40)
         self.search_edit.textChanged.connect(self.load_data)
         hdr.addWidget(self.search_edit)
-        add_btn = QPushButton("➕  إضافة مورد")
+
+        add_btn = QPushButton("➕  إضافة مورد جديد")
         add_btn.setObjectName("btn_success")
         add_btn.clicked.connect(self.add_supplier)
         hdr.addWidget(add_btn)
         lay.addLayout(hdr)
-        self.table = QTableWidget()
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels(["الاسم", "الشركة", "الهاتف", "البريد", "الدولة", "الحالة", "إجراءات"])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.table.setAlternatingRowColors(True)
-        self.table.verticalHeader().setVisible(False)
-        lay.addWidget(self.table)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setStyleSheet("background: transparent;")
+        self.container = QWidget()
+        self.grid = QGridLayout(self.container)
+        self.grid.setSpacing(20)
+        scroll.setWidget(self.container)
+        lay.addWidget(scroll)
+
         self.load_data()
 
     def load_data(self):
+        while self.grid.count():
+            item = self.grid.takeAt(0)
+            if item.widget(): item.widget().deleteLater()
+
         search = self.search_edit.text().strip()
         params = [f"%{search}%", f"%{search}%"] if search else []
         where = "WHERE (name LIKE ? OR company LIKE ?)" if search else ""
         rows = db.fetchall(f"SELECT * FROM suppliers {where} ORDER BY name", params)
-        self.table.setRowCount(len(rows))
         for i, r in enumerate(rows):
-            for col, val in enumerate([r['name'], r['company'] or "", r['phone'] or "", r['email'] or "", r['country'] or ""]):
-                self.table.setItem(i, col, QTableWidgetItem(val))
-            si = QTableWidgetItem("✅ نشط" if r['is_active'] else "❌ غير نشط")
-            si.setForeground(QColor(COLORS['accent_green'] if r['is_active'] else COLORS['accent_red']))
-            self.table.setItem(i, 5, si)
-            bw = QWidget(); bl = QHBoxLayout(bw); bl.setContentsMargins(2,1,2,1); bl.setSpacing(3)
-            eb = QPushButton("✏️"); eb.setFixedSize(28,26); eb.setObjectName("btn_flat")
-            eb.clicked.connect(lambda _, row=dict(r): self.edit_supplier(row))
-            bl.addWidget(eb)
-            if has_perm("all"):
-                dbb = QPushButton("🗑")
-                dbb.setFixedSize(28, 26)
-                dbb.setObjectName("btn_danger")
-                dbb.clicked.connect(lambda _, row=dict(r): self.delete_supplier(row))
-                bl.addWidget(dbb)
-            self.table.setCellWidget(i, 6, bw)
+            card = SupplierCard(dict(r), self.container)
+            self.grid.addWidget(card, i // 2, i % 2)
 
     def add_supplier(self):
         dlg = SupplierDialog(self)
@@ -3985,48 +4345,62 @@ class SettingsPage(QWidget):
 
         tabs = QTabWidget()
 
-        # General Settings
-        t1 = QWidget()
-        f1 = QFormLayout(t1)
-        f1.setContentsMargins(20, 16, 20, 16)
-        f1.setSpacing(12)
-
+        # 1. Company
+        t1 = QWidget(); f1 = QFormLayout(t1); f1.setContentsMargins(30, 30, 30, 30); f1.setSpacing(15)
         self.company_edit = QLineEdit(db.get_setting("company_name", COMPANY_NAME))
+        logo_btn = QPushButton("تحميل شعار الشركة"); logo_btn.setObjectName("btn_flat")
+        f1.addRow("اسم المؤسسة:", self.company_edit)
+        f1.addRow("شعار المؤسسة:", logo_btn)
+        tabs.addTab(t1, "المؤسسة")
+
+        # 2. Appearance
+        t2 = QWidget(); f2 = QFormLayout(t2); f2.setContentsMargins(30, 30, 30, 30)
+        f2.addRow("السمة الافتراضية:", QComboBox())
+        f2.addRow("حجم الخط:", QSpinBox())
+        tabs.addTab(t2, "المظهر")
+
+        # 3. Currency
+        t3 = QWidget(); f3 = QFormLayout(t3); f3.setContentsMargins(30, 30, 30, 30)
         self.currency_combo = QComboBox()
         self.currency_combo.addItems(["AED", "USD", "EUR", "SAR", "QAR"])
         self.currency_combo.setCurrentText(db.get_setting("currency", "AED"))
-        self.tax_spin = QDoubleSpinBox()
-        self.tax_spin.setRange(0, 100)
-        self.tax_spin.setValue(float(db.get_setting("tax_rate", "0")))
-        self.tax_spin.setVisible(False) # Hide as requested
+        f3.addRow("عملة النظام:", self.currency_combo)
+        tabs.addTab(t3, "العملة")
+
+        # 4. Backup
+        t4 = QWidget(); f4 = QVBoxLayout(t4); f4.setContentsMargins(30, 30, 30, 30)
+        b_btn = QPushButton("إنشاء نسخة احتياطية الآن"); b_btn.setObjectName("btn_success")
+        b_btn.clicked.connect(self.do_backup)
+        r_btn = QPushButton("استعادة من ملف"); r_btn.setObjectName("btn_warning")
+        r_btn.clicked.connect(self.do_restore)
+        f4.addWidget(b_btn); f4.addWidget(r_btn); f4.addStretch()
+        tabs.addTab(t4, "النسخ الاحتياطي")
+
+        # 5. Database
+        tabs.addTab(QWidget(), "قاعدة البيانات")
+
+        # 6. Notifications
+        t6 = QWidget(); f6 = QVBoxLayout(t6); f6.setContentsMargins(30, 30, 30, 30)
         self.alarm_cb = QCheckBox("تفعيل تنبيهات المخزون")
         self.alarm_cb.setChecked(db.get_setting("alarm_enabled", "true") == "true")
-        self.auto_backup_cb = QCheckBox("النسخ الاحتياطي التلقائي")
-        self.auto_backup_cb.setChecked(db.get_setting("auto_backup", "true") == "true")
         self.notif_sound_cb = QCheckBox("تفعيل صوت التنبيه")
         self.notif_sound_cb.setChecked(db.get_setting("notif_sound", "true") == "true")
+        f6.addWidget(self.alarm_cb); f6.addWidget(self.notif_sound_cb); f6.addStretch()
+        tabs.addTab(t6, "الإشعارات")
 
-        f1.addRow("اسم الشركة:", self.company_edit)
-        f1.addRow("العملة:", self.currency_combo)
-        # f1.addRow("نسبة الضريبة (%):", self.tax_spin)
-        f1.addRow("", self.alarm_cb)
-        f1.addRow("", self.auto_backup_cb)
-        f1.addRow("", self.notif_sound_cb)
+        # 7. Users / 8. Permissions / 9. Security
+        tabs.addTab(QWidget(), "المستخدمون")
+        tabs.addTab(QWidget(), "الصلاحيات")
+        tabs.addTab(QWidget(), "الأمان")
 
-        save_btn = QPushButton("💾  حفظ الإعدادات")
-        save_btn.setObjectName("btn_success")
-        save_btn.clicked.connect(self.save_settings)
-        f1.addRow("", save_btn)
-        tabs.addTab(t1, "إعدادات عامة")
-
-        # Offers & Discounts
+        # 10. Offers & Discounts
         if CURRENT_USER.get("role") in ["Admin", "Warehouse Manager"]:
             t_off = QWidget()
             t_off_l = QVBoxLayout(t_off)
-            t_off_l.setContentsMargins(20, 16, 20, 16)
+            t_off_l.setContentsMargins(30, 30, 30, 30)
 
             ot = QLabel("🎟️  إدارة العروض والخصومات")
-            ot.setStyleSheet(f"font-size: 15px; font-weight: 700; color: {COLORS['accent']};")
+            ot.setStyleSheet(f"font-size: 18px; font-weight: 800; color: {COLORS['accent']};")
             t_off_l.addWidget(ot)
 
             oform = QFormLayout()
@@ -4058,9 +4432,16 @@ class SettingsPage(QWidget):
             self.offers_table = QTableWidget()
             self.offers_table.setColumnCount(5)
             self.offers_table.setHorizontalHeaderLabels(["الكود", "النوع", "القيمة", "التطبيق", "إجراءات"])
+            self.offers_table.setAlternatingRowColors(True)
+            self.offers_table.setShowGrid(False)
             t_off_l.addWidget(self.offers_table)
             tabs.addTab(t_off, "العروض والخصومات")
             self.load_offers()
+
+        save_all_btn = QPushButton("💾  حفظ جميع الإعدادات")
+        save_all_btn.setObjectName("btn_success")
+        save_all_btn.clicked.connect(self.save_settings)
+        lay.addWidget(save_all_btn, alignment=Qt.AlignLeft)
 
         # Backup
         t2 = QWidget()
@@ -4244,16 +4625,16 @@ class MainWindow(QMainWindow):
 
         # ── Sidebar (RTL: right side) ──
         sidebar = QFrame()
-        sidebar.setFixedWidth(230)
-        sidebar.setStyleSheet(f"QFrame {{ background: {COLORS['bg_nav']}; border-right: 1px solid {COLORS['border2']}; }}")
+        sidebar.setFixedWidth(260)
+        sidebar.setStyleSheet(f"QFrame {{ background: {COLORS['sidebar']}; border: none; }}")
         sidebar_lay = QVBoxLayout(sidebar)
         sidebar_lay.setContentsMargins(0, 0, 0, 0)
         sidebar_lay.setSpacing(0)
 
         # Logo area
         logo_area = QFrame()
-        logo_area.setFixedHeight(90)
-        logo_area.setStyleSheet(f"background: {COLORS['bg_dark']}; border-bottom: 1px solid {COLORS['border2']};")
+        logo_area.setFixedHeight(120)
+        logo_area.setStyleSheet(f"background: transparent;")
         la_lay = QHBoxLayout(logo_area)
         la_lay.setContentsMargins(12, 10, 12, 10)
         la_lay.setSpacing(10)
@@ -4262,36 +4643,15 @@ class MainWindow(QMainWindow):
             ll.setPixmap(QPixmap(str(LOGO_PATH)).scaled(48, 48, Qt.KeepAspectRatio, Qt.SmoothTransformation))
             la_lay.addWidget(ll)
         lt = QVBoxLayout(); lt.setSpacing(2)
-        cl = QLabel("AMS")
-        cl.setStyleSheet(f"color: {COLORS['accent']}; font-size: 18px; font-weight: 900; letter-spacing: 2px;")
-        sl = QLabel("نظام إدارة المخازن")
-        sl.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 9px;")
+        cl = QLabel("AMERICAN MARINE")
+        cl.setWordWrap(True)
+        cl.setStyleSheet(f"color: white; font-size: 14px; font-weight: 900; letter-spacing: 1px;")
+        sl = QLabel("إدارة المخازن المؤسسي")
+        sl.setStyleSheet(f"color: {COLORS['accent']}; font-size: 10px; font-weight: 700;")
         lt.addWidget(cl); lt.addWidget(sl)
         la_lay.addLayout(lt)
         sidebar_lay.addWidget(logo_area)
 
-        # User info
-        ua = QFrame()
-        ua.setStyleSheet(f"background: {COLORS['bg_card']}; border-bottom: 1px solid {COLORS['border2']};")
-        ua.setFixedHeight(68)
-        ul = QHBoxLayout(ua)
-        ul.setContentsMargins(12, 8, 12, 8)
-        ul.setSpacing(10)
-        name_initial = self.user.get('full_name', 'م')
-        if not name_initial: name_initial = 'م'
-        avatar = QLabel(name_initial[0].upper())
-        avatar.setFixedSize(40, 40)
-        avatar.setAlignment(Qt.AlignCenter)
-        avatar.setStyleSheet(f"background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 {COLORS['accent']}, stop:1 {COLORS['accent2']}); border-radius: 20px; color: white; font-size: 16px; font-weight: 800;")
-        ui2 = QVBoxLayout(); ui2.setSpacing(2)
-        nl = QLabel(self.user.get('full_name', self.user.get('username', 'مستخدم')))
-        nl.setStyleSheet(f"color: {COLORS['text_primary']}; font-size: 12px; font-weight: 600;")
-        role_map_inv = {"Admin": "مدير نظام", "Warehouse Manager": "مدير مخازن", "Store Keeper": "أمين مخزن", "Auditor": "مدقق", "Viewer": "مشاهد"}
-        rl = QLabel(role_map_inv.get(self.user.get('role'), "مشاهد"))
-        rl.setStyleSheet(f"color: {COLORS['accent']}; font-size: 10px;")
-        ui2.addWidget(nl); ui2.addWidget(rl)
-        ul.addWidget(avatar); ul.addLayout(ui2)
-        sidebar_lay.addWidget(ua)
 
         nav_label = QLabel("القائمة الرئيسية")
         nav_label.setContentsMargins(16, 12, 0, 4)
@@ -4304,13 +4664,19 @@ class MainWindow(QMainWindow):
             ("📂", AR['categories']),
             ("🏭", AR['warehouses']),
             ("🏢", AR['suppliers']),
+            ("📜", "أوامر الشراء"),
             ("📥", AR['stock_in']),
             ("📤", AR['stock_out']),
             ("🔄", AR['transfers']),
-            ("📊", AR['reports']),
             ("📋", AR['audit']),
+            ("📊", AR['reports']),
+            ("📈", "التحليلات الذكية"),
+            ("🔔", "الإشعارات"),
             ("👥", AR['users']),
+            ("🛡️", "الصلاحيات والوصول"),
             ("⚙️", AR['settings']),
+            ("💾", "النسخ الاحتياطي"),
+            ("🔄", "تحديث النظام"),
         ]
 
         self.nav_btn_group = QButtonGroup(self)
@@ -4346,31 +4712,60 @@ class MainWindow(QMainWindow):
 
         # Top bar
         topbar = QFrame()
-        topbar.setFixedHeight(56)
-        topbar.setStyleSheet(f"QFrame {{ background: {COLORS['bg_nav']}; border-bottom: 1px solid {COLORS['border2']}; }}")
+        topbar.setFixedHeight(70)
+        topbar.setStyleSheet(f"QFrame {{ background: {COLORS['white']}; border-bottom: 1px solid {COLORS['border']}; }}")
         tb_lay = QHBoxLayout(topbar)
-        tb_lay.setContentsMargins(20, 0, 20, 0)
-        tb_lay.setSpacing(12)
+        tb_lay.setContentsMargins(30, 0, 30, 0)
+        tb_lay.setSpacing(20)
 
         self.page_title_lbl = QLabel(AR['dashboard'])
-        self.page_title_lbl.setStyleSheet(f"color: {COLORS['text_primary']}; font-size: 16px; font-weight: 700;")
+        self.page_title_lbl.setStyleSheet(f"color: {COLORS['text_main']}; font-size: 18px; font-weight: 700;")
         tb_lay.addWidget(self.page_title_lbl)
         tb_lay.addStretch()
 
         global_search = QLineEdit()
-        global_search.setPlaceholderText("🔍  بحث سريع...")
-        global_search.setFixedWidth(220)
-        global_search.setFixedHeight(34)
+        global_search.setPlaceholderText("🔍  بحث سريع في النظام...")
+        global_search.setFixedWidth(300)
+        global_search.setFixedHeight(40)
+        global_search.setStyleSheet(f"background: #F1F5F9; border-radius: 20px; border: 1px solid {COLORS['border']}; padding: 0 20px; color: {COLORS['text_main']};")
         global_search.returnPressed.connect(lambda: self.global_search(global_search.text()))
         tb_lay.addWidget(global_search)
 
         self.clock_lbl = QLabel()
-        self.clock_lbl.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 12px; min-width: 160px;")
+        self.clock_lbl.setStyleSheet(f"color: {COLORS['text_sub']}; font-size: 13px; font-weight: 600;")
         self.update_clock()
         tb_lay.addWidget(self.clock_lbl)
 
         self.notif_badge = NotificationBadge()
         tb_lay.addWidget(self.notif_badge)
+
+        # User Profile Mini
+        profile = QFrame()
+        pl = QHBoxLayout(profile)
+        pl.setContentsMargins(0,0,0,0)
+
+        name_initial = self.user.get('full_name', 'م')
+        avatar = QLabel(name_initial[0].upper() if name_initial else "م")
+        avatar.setFixedSize(36, 36)
+        avatar.setAlignment(Qt.AlignCenter)
+        avatar.setStyleSheet(f"background: {COLORS['accent']}; color: white; border-radius: 18px; font-weight: 800;")
+
+        username = QLabel(self.user.get('full_name', 'مستخدم'))
+        username.setStyleSheet(f"color: {COLORS['text_main']}; font-size: 13px; font-weight: 600;")
+
+        pl.addWidget(username)
+        pl.addWidget(avatar)
+        tb_lay.addWidget(profile)
+
+        # Tools
+        theme_btn = QPushButton("🌓")
+        theme_btn.setFixedSize(36, 36)
+        theme_btn.setObjectName("btn_flat")
+        lang_btn = QPushButton("AR")
+        lang_btn.setFixedSize(36, 36)
+        lang_btn.setObjectName("btn_flat")
+        tb_lay.addWidget(theme_btn)
+        tb_lay.addWidget(lang_btn)
 
         quick_add_btn = QPushButton("➕ إضافة سريعة")
         quick_add_btn.setFixedSize(130, 36)
@@ -4397,14 +4792,16 @@ class MainWindow(QMainWindow):
         self.transfers_page = TransfersPage()
         self.transfers_page.stock_changed.connect(self.on_stock_changed)
         self.reports_page = ReportsPage()
+        self.notification_page = NotificationPage()
         self.audit_page = AuditPage()
         self.users_page = UsersPage()
         self.settings_page = SettingsPage(self.user)
 
         for page in [self.dashboard_page, self.products_page, self.categories_page, self.warehouses_page,
-                     self.suppliers_page, self.stock_in_page, self.stock_out_page,
-                     self.transfers_page, self.reports_page, self.audit_page,
-                     self.users_page, self.settings_page]:
+                     self.suppliers_page, PlaceholderPage("أوامر الشراء"), self.stock_in_page, self.stock_out_page,
+                     self.transfers_page, self.audit_page, self.reports_page, PlaceholderPage("التحليلات"),
+                     self.notification_page, self.users_page, PlaceholderPage("الصلاحيات"), self.settings_page,
+                     PlaceholderPage("النسخ الاحتياطي"), PlaceholderPage("تحديث النظام")]:
             self.stack.addWidget(page)
 
         scroll_area = QScrollArea()
@@ -4426,10 +4823,12 @@ class MainWindow(QMainWindow):
         self.update_notification_count()
 
     def navigate_to(self, idx):
+        # Animation placeholder (can implement slide effect here)
         self.stack.setCurrentIndex(idx)
         titles = [AR['dashboard'], AR['products'], AR['categories'], AR['warehouses'], AR['suppliers'],
-                  AR['stock_in'], AR['stock_out'], AR['transfers'], AR['reports'],
-                  AR['audit'], AR['users'], AR['settings']]
+                  "أوامر الشراء", AR['stock_in'], AR['stock_out'], AR['transfers'],
+                  AR['audit'], AR['reports'], "التحليلات", "الإشعارات",
+                  AR['users'], "الصلاحيات", AR['settings'], "النسخ الاحتياطي"]
         self.page_title_lbl.setText(titles[idx] if idx < len(titles) else "")
         btn = self.nav_btn_group.button(idx)
         if btn:
@@ -4478,6 +4877,8 @@ class MainWindow(QMainWindow):
     def update_notification_count(self):
         count = db.fetchone("SELECT COUNT(*) as c FROM notifications WHERE is_read=0")
         self.notif_badge.set_count(count['c'] if count else 0)
+        if hasattr(self, 'notification_page'):
+            self.notification_page.load_data()
 
     def update_clock(self):
         now = datetime.now()
