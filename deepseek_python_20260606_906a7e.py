@@ -146,15 +146,16 @@ QLabel {{
 QPushButton {{
     background-color: {COLORS['accent2']};
     color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 10px 20px;
+    border: 1px solid {COLORS['accent']};
+    border-radius: 12px;
+    padding: 10px 24px;
     font-weight: 700;
     font-size: 14px;
-    min-height: 40px;
+    min-height: 42px;
 }}
 QPushButton:hover {{
     background-color: {COLORS['accent']};
+    color: {COLORS['bg_dark']};
 }}
 QPushButton:pressed {{ background-color: #0284C7; }}
 QPushButton:disabled {{ background-color: {COLORS['text_muted']}; color: {COLORS['bg_card']}; }}
@@ -186,15 +187,20 @@ QPushButton#btn_flat:hover {{
     color: {COLORS['text_primary']};
     border-color: {COLORS['accent']};
 }}
-QLineEdit, QTextEdit, QPlainTextEdit {{
+QLineEdit, QTextEdit, QPlainTextEdit, QDoubleSpinBox, QDateEdit, QSpinBox {{
     background-color: {COLORS['bg_card2']};
     color: {COLORS['text_primary']};
-    border: 2px solid {COLORS['border2']};
-    border-radius: 10px;
-    padding: 10px 15px;
+    border: 1px solid {COLORS['border2']};
+    border-radius: 12px;
+    padding: 12px 18px;
     font-size: 14px;
+    selection-background-color: {COLORS['accent']};
+    selection-color: {COLORS['bg_dark']};
 }}
-QLineEdit:focus, QTextEdit:focus {{ border-color: {COLORS['accent']}; background-color: {COLORS['bg_dark']}; }}
+QLineEdit:focus, QTextEdit:focus, QDoubleSpinBox:focus {{
+    border: 1px solid {COLORS['accent']};
+    background-color: {COLORS['bg_dark']};
+}}
 QComboBox {{
     background-color: {COLORS['bg_card2']};
     color: {COLORS['text_primary']};
@@ -976,7 +982,7 @@ class SplashScreen(QSplashScreen):
         p.drawText(QRect(0, 192, w, 26), Qt.AlignCenter, "نظام إدارة المخازن المؤسسي")
         p.setFont(QFont("Cairo", 10))
         p.setPen(QColor(COLORS['text_muted']))
-        p.drawText(QRect(0, 222, w, 22), Qt.AlignCenter, "نظام تخطيط موارد المؤسسات — AMS")
+        p.drawText(QRect(0, 222, w, 22), Qt.AlignCenter, "نظام تخطيط موارد المؤسسات الذكي — AMS")
         p.setPen(QPen(QColor("#1E293B"), 1))
         p.drawLine(80, 280, 640, 280)
         p.end()
@@ -1569,15 +1575,26 @@ class DashboardPage(QWidget):
         # Smart Insights Text
         if most_used:
             best_prod = most_used[0]['name']
-            insights = db.get_product_purchase_insights(db.fetchone("SELECT id FROM products WHERE name=?", (best_prod,))['id'])
+            prod_row = db.fetchone("SELECT id, quantity FROM products WHERE name=?", (best_prod,))
+            insights = db.get_product_purchase_insights(prod_row['id'])
+
+            # Smart Forecast (Logic: Total Issued / 30 days = daily rate)
+            total_issued = most_used[0]['total_issued']
+            daily_rate = total_issued / 30
+            days_left = (prod_row['quantity'] / daily_rate) if daily_rate > 0 else 999
+
+            txt = f"المنتج الأكثر طلباً هو <b>{best_prod}</b>.<br>"
             if insights:
-                self.intel_lbl.setText(f"المنتج الأكثر طلباً هو <b>{best_prod}</b>.<br>"
-                                       f"يتم شراؤه عادةً من <b>{insights['supplier_name']}</b> "
-                                       f"بسعر <b>{currency} {insights['unit_price']:.2f}</b>.")
-            else:
-                self.intel_lbl.setText(f"المنتج الأكثر طلباً هو <b>{best_prod}</b>. لم يتم تسجيل عمليات شراء مؤخراً.")
+                txt += f"يُشترى من <b>{insights['supplier_name']}</b> بسعر <b>{currency} {insights['unit_price']:.2f}</b>.<br>"
+
+            if days_left < 7:
+                txt += f"⚠️ المخزون قد ينفذ خلال <b>{days_left:.1f} أيام</b> بناءً على معدل الاستهلاك."
+            elif daily_rate > 0:
+                txt += f"✅ المخزون يكفي لحوالي <b>{days_left:.0f} يوم</b>."
+
+            self.intel_lbl.setText(txt)
         else:
-            self.intel_lbl.setText("ابدأ بتسجيل عمليات الصرف للحصول على تحليلات ذكية.")
+            self.intel_lbl.setText("ابدأ بتسجيل عمليات الصرف للحصول على تحليلات ذكية وتوقعات المخزون.")
 
         recent_mvs = db.fetchall("""
             SELECT sm.movement_number, sm.movement_type, p.name as product_name,
@@ -3725,10 +3742,13 @@ class UsersPage(QWidget):
         self.table.setRowCount(len(rows))
         role_colors = {"Admin": COLORS['accent_red'], "Warehouse Manager": COLORS['accent_orange'],
                        "Store Keeper": COLORS['accent_green'], "Auditor": COLORS['accent_purple'], "Viewer": COLORS['text_muted']}
+        role_map_inv = {"Admin": "مدير نظام", "Warehouse Manager": "مدير مخازن", "Store Keeper": "أمين مخزن", "Auditor": "مدقق", "Viewer": "مشاهد"}
+
         for i, r in enumerate(rows):
             self.table.setItem(i, 0, QTableWidgetItem(r['username']))
             self.table.setItem(i, 1, QTableWidgetItem(r['full_name'] or ""))
-            role_item = QTableWidgetItem(r['role'])
+            role_display = role_map_inv.get(r['role'], r['role'])
+            role_item = QTableWidgetItem(role_display)
             role_item.setForeground(QColor(role_colors.get(r['role'], COLORS['text_primary'])))
             self.table.setItem(i, 2, role_item)
             self.table.setItem(i, 3, QTableWidgetItem(r['department'] or ""))
@@ -4179,7 +4199,8 @@ class MainWindow(QMainWindow):
         ui2 = QVBoxLayout(); ui2.setSpacing(2)
         nl = QLabel(self.user.get('full_name', self.user.get('username', 'مستخدم')))
         nl.setStyleSheet(f"color: {COLORS['text_primary']}; font-size: 12px; font-weight: 600;")
-        rl = QLabel(self.user.get('role', 'مشاهد'))
+        role_map_inv = {"Admin": "مدير نظام", "Warehouse Manager": "مدير مخازن", "Store Keeper": "أمين مخزن", "Auditor": "مدقق", "Viewer": "مشاهد"}
+        rl = QLabel(role_map_inv.get(self.user.get('role'), "مشاهد"))
         rl.setStyleSheet(f"color: {COLORS['accent']}; font-size: 10px;")
         ui2.addWidget(nl); ui2.addWidget(rl)
         ul.addWidget(avatar); ul.addLayout(ui2)
@@ -4263,6 +4284,12 @@ class MainWindow(QMainWindow):
         self.notif_badge = NotificationBadge()
         tb_lay.addWidget(self.notif_badge)
 
+        quick_add_btn = QPushButton("➕ إضافة سريعة")
+        quick_add_btn.setFixedSize(120, 34)
+        quick_add_btn.setObjectName("btn_success")
+        quick_add_btn.clicked.connect(lambda: self.navigate_to(4))
+        tb_lay.addWidget(quick_add_btn)
+
         right_area.addWidget(topbar)
 
         # Pages
@@ -4301,8 +4328,8 @@ class MainWindow(QMainWindow):
         right_widget.setLayout(right_area)
 
         # RTL: sidebar on right, content on left
-        main_layout.addWidget(right_widget)
         main_layout.addWidget(sidebar)
+        main_layout.addWidget(right_widget)
 
         self.statusBar().showMessage(
             f"  ✅  مرحباً، {self.user.get('full_name', '')}  |  جهة: {COMPANY_NAME}")
@@ -4364,7 +4391,11 @@ class MainWindow(QMainWindow):
 
     def update_clock(self):
         now = datetime.now()
-        self.clock_lbl.setText(f"📅 {now.strftime('%d/%m/%Y')}  🕐 {now.strftime('%H:%M:%S')}")
+        h = now.hour
+        suffix = "صباحاً" if h < 12 else "مساءً"
+        h12 = h if h <= 12 else h - 12
+        if h12 == 0: h12 = 12
+        self.clock_lbl.setText(f"📅 {now.strftime('%Y/%m/%d')}  🕐 {h12}:{now.strftime('%M:%S')} {suffix}")
 
     def global_search(self, text):
         if not text.strip():
