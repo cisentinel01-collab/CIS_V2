@@ -110,21 +110,23 @@ AR = {
 # THEME
 # ─────────────────────────────────────────────────────────────────────────────
 COLORS = {
-    "bg_primary":    "#F3F4F6", # Light Gray requested
+    "bg_primary":    "#F8F9FA",
     "white":         "#FFFFFF",
-    "sidebar":       "#1E3A8A", # Deep Blue requested
-    "panel":         "#F9FAFB",
-    "accent":        "#1E3A8A", # Accent also uses Deep Blue
-    "success":       "#10B981",
+    "sidebar":       "#111111", # Onyx Black
+    "panel":         "#1A1A1A",
+    "accent":        "#D4AF37", # Metallic Gold
+    "accent2":       "#C5A028",
+    "success":       "#059669",
     "warning":       "#F59E0B",
-    "danger":        "#EF4444",
-    "purple":        "#8B5CF6",
-    "text_main":     "#111827",
+    "danger":        "#DC2626",
+    "purple":        "#7C3AED",
+    "text_main":     "#111111",
     "text_sub":      "#4B5563",
-    "border":        "#D1D5DB",
-    "shadow":        "rgba(0, 0, 0, 0.1)",
-    "glass":         "rgba(255, 255, 255, 0.8)",
-    "glow":          "rgba(30, 58, 138, 0.2)",
+    "border":        "#E5E7EB",
+    "gold_border":   "#D4AF37",
+    "shadow":        "rgba(0, 0, 0, 0.08)",
+    "glass":         "rgba(255, 255, 255, 0.75)",
+    "glow":          "rgba(212, 175, 55, 0.25)",
 }
 
 # Legacy mapping to avoid breakage during transition
@@ -154,23 +156,27 @@ QMainWindow, QDialog, QWidget {{
     font-family: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
     font-size: 14px;
 }}
+QFrame#glass_panel {{
+    background-color: {COLORS['glass']};
+    border-bottom: 1px solid {COLORS['border']};
+}}
 QLabel {{
     color: {COLORS['text_primary']};
     background: transparent;
 }}
 QPushButton {{
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 {COLORS['accent']}, stop:1 {COLORS['accent2']});
-    color: white;
-    border: none;
-    border-radius: 14px;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #222222, stop:1 #111111);
+    color: {COLORS['accent']};
+    border: 1px solid {COLORS['accent']};
+    border-radius: 10px;
     padding: 10px 24px;
     font-weight: 700;
     font-size: 14px;
     min-height: 44px;
 }}
 QPushButton:hover {{
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 {COLORS['accent2']}, stop:1 {COLORS['accent']});
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    background: {COLORS['accent']};
+    color: #111111;
 }}
 QPushButton:pressed {{ background-color: #0284C7; }}
 QPushButton:disabled {{ background-color: {COLORS['text_muted']}; color: {COLORS['bg_card']}; }}
@@ -204,27 +210,29 @@ QPushButton#btn_flat:hover {{
 }}
 QLineEdit, QTextEdit, QPlainTextEdit, QDoubleSpinBox, QDateEdit, QSpinBox {{
     background-color: #FFFFFF;
-    color: #111827;
-    border: 2px solid #D1D5DB;
-    border-radius: 8px;
-    padding: 12px 15px;
-    font-size: 15px;
-    font-weight: 500;
-    selection-background-color: #1E3A8A;
-    selection-color: #FFFFFF;
+    color: #000000;
+    border: 2px solid #111111;
+    border-radius: 6px;
+    padding: 12px 18px;
+    font-size: 16px;
+    font-weight: 700;
+    selection-background-color: {COLORS['accent']};
+    selection-color: #111111;
 }}
 QLineEdit:focus, QTextEdit:focus, QDoubleSpinBox:focus, QDateEdit:focus {{
-    border: 2px solid #1E3A8A;
-    background-color: #FFFFFF;
+    border: 2px solid {COLORS['accent']};
+    background-color: #FFFDF0; /* Subtle gold tint on focus */
     outline: none;
 }}
 QComboBox {{
-    background-color: {COLORS['bg_card2']};
-    color: {COLORS['text_primary']};
-    border: 2px solid {COLORS['border2']};
-    border-radius: 10px;
+    background-color: #FFFFFF;
+    color: #000000;
+    border: 2px solid #111111;
+    border-radius: 6px;
     padding: 10px 15px;
-    min-height: 40px;
+    min-height: 44px;
+    font-weight: 700;
+    font-size: 16px;
 }}
 QComboBox:focus {{ border-color: {COLORS['accent']}; }}
 QComboBox::drop-down {{ border: none; width: 35px; }}
@@ -236,21 +244,22 @@ QComboBox::down-arrow {{
     margin-right: 10px;
 }}
 QTableWidget {{
-    background-color: {COLORS['bg_card']};
-    color: {COLORS['text_primary']};
-    border: 1px solid {COLORS['border2']};
-    border-radius: 12px;
-    gridline-color: {COLORS['bg_dark']};
-    selection-background-color: {COLORS['selected']};
-    alternate-background-color: #F8FAFC;
+    background-color: #FFFFFF;
+    color: #111111;
+    border: 2px solid #E5E7EB;
+    border-radius: 10px;
+    gridline-color: #F3F4F6;
+    selection-background-color: rgba(212, 175, 55, 0.2);
+    alternate-background-color: #F9FAFB;
+    font-size: 14px;
 }}
 QHeaderView::section {{
-    background-color: {COLORS['bg_dark']};
-    color: {COLORS['text_secondary']};
-    font-weight: 700;
-    padding: 12px;
+    background-color: #111111;
+    color: #D4AF37;
+    font-weight: 800;
+    padding: 15px;
     border: none;
-    border-bottom: 1px solid {COLORS['border2']};
+    border-bottom: 2px solid #D4AF37;
 }}
 QScrollBar:vertical {{
     background: transparent; width: 10px; border-radius: 5px;
@@ -260,20 +269,28 @@ QScrollBar::handle:vertical {{
 }}
 QScrollBar::handle:vertical:hover {{ background: {COLORS['accent']}; }}
 QGroupBox {{
-    font-weight: 800; font-size: 14px; color: {COLORS['accent']};
-    border: 2px solid {COLORS['border2']}; border-radius: 12px;
-    margin-top: 15px; padding-top: 20px;
+    font-weight: 800; font-size: 14px; color: #111111;
+    border: 2px solid #111111; border-radius: 12px;
+    margin-top: 20px; padding-top: 25px;
+    background-color: #FFFFFF;
 }}
 QGroupBox::title {{
     subcontrol-origin: margin; left: 15px; padding: 0 10px;
 }}
-QTabWidget::pane {{ border: 2px solid {COLORS['border2']}; border-radius: 12px; top: -1px; }}
+QTabWidget::pane {{ border: 2px solid #111111; border-radius: 12px; top: -1px; background-color: #FFFFFF; }}
 QTabBar::tab {{
-    background-color: {COLORS['bg_card2']}; color: {COLORS['text_secondary']};
-    padding: 12px 25px; border-top-left-radius: 10px; border-top-right-radius: 10px;
-    margin-right: 5px; font-weight: 700;
+    background-color: #F1F5F9; color: #4B5563;
+    padding: 12px 30px; border-top-left-radius: 12px; border-top-right-radius: 12px;
+    margin-right: 5px; font-weight: 800;
+    border: 1px solid #D1D5DB;
+    border-bottom: none;
 }}
-QTabBar::tab:selected {{ background-color: {COLORS['bg_card']}; color: {COLORS['accent']}; }}
+QTabBar::tab:selected {{
+    background-color: #FFFFFF;
+    color: #111111;
+    border: 2px solid #111111;
+    border-bottom: 2px solid #FFFFFF;
+}}
 QFrame#card {{
     background-color: {COLORS['white']};
         border: 2px solid #E5E7EB;
@@ -1033,14 +1050,36 @@ class NotificationPage(QWidget):
             self.notif_list.addWidget(f)
         self.notif_list.addStretch()
 
-class PlaceholderPage(QWidget):
+class EnterpriseModuleView(QWidget):
     def __init__(self, title, parent=None):
         super().__init__(parent)
         lay = QVBoxLayout(self)
-        lbl = QLabel(f"🚧  قريباً: وحدة {title}")
-        lbl.setAlignment(Qt.AlignCenter)
-        lbl.setStyleSheet(f"font-size: 20px; font-weight: 700; color: {COLORS['text_sub']};")
-        lay.addWidget(lbl)
+        lay.setContentsMargins(30, 30, 30, 30)
+        lay.setSpacing(25)
+
+        hdr = QLabel(f"📊 {title} — نسخة المؤسسات")
+        hdr.setStyleSheet(f"font-size: 28px; font-weight: 900; color: {COLORS['text_main']};")
+        lay.addWidget(hdr)
+
+        container = QFrame(); container.setObjectName("card")
+        cl = QVBoxLayout(container); cl.setContentsMargins(0, 0, 0, 0); cl.setSpacing(0)
+
+        # Enterprise Toolbar
+        tools = QFrame(); tools.setFixedHeight(70); tools.setStyleSheet(f"background: #F9FAFB; border-bottom: 2px solid {COLORS['border']}; border-top-left-radius: 12px; border-top-right-radius: 12px;")
+        tl = QHBoxLayout(tools); tl.setContentsMargins(25, 0, 25, 0)
+        tl.addWidget(QLabel("🔍")); s = QLineEdit(); s.setPlaceholderText(f"البحث في {title}..."); s.setFixedWidth(300); tl.addWidget(s)
+        tl.addStretch()
+        exp = QPushButton("📥 تصدير تقرير ذكي"); exp.setFixedSize(180, 40); tl.addWidget(exp)
+        cl.addWidget(tools)
+
+        table = QTableWidget(); table.setColumnCount(6)
+        table.setHorizontalHeaderLabels(["كود السجل", "البيان التفصيلي", "الكمية/القيمة", "حالة العمل", "المسؤول التنفيذي", "تاريخ العملية"])
+        table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        table.setFrameShape(QFrame.NoFrame); table.setShowGrid(False)
+        table.setAlternatingRowColors(True)
+        cl.addWidget(table)
+
+        lay.addWidget(container)
 
 class CategoriesPage(QWidget):
     def __init__(self, parent=None):
@@ -1389,9 +1428,9 @@ class SidebarButton(QPushButton):
     def _style(self, active):
         if active:
             return f"""QPushButton {{
-                background: qlineargradient(x1:1,y1:0,x2:0,y2:0, stop:0 rgba(37, 99, 235, 0.1), stop:1 transparent);
-                color: white; border: none; border-left: 4px solid {COLORS['accent']};
-                border-radius: 0; text-align: right; padding-right: 20px; font-weight: 800; font-size: 14px;
+                background: qlineargradient(x1:1,y1:0,x2:0,y2:0, stop:0 {COLORS['accent']}33, stop:1 transparent);
+                color: {COLORS['accent']}; border: none; border-left: 4px solid {COLORS['accent']};
+                border-radius: 0; text-align: right; padding-right: 20px; font-weight: 800; font-size: 15px;
                 qproperty-icon: none;
             }}"""
         return f"""QPushButton {{
@@ -1421,7 +1460,7 @@ class StatCard(QFrame):
         icon_lbl = QLabel(icon)
         icon_lbl.setFixedSize(50, 50)
         icon_lbl.setAlignment(Qt.AlignCenter)
-        icon_lbl.setStyleSheet(f"background: #F3F4F6; color: #1E3A8A; border: 2px solid #D1D5DB; border-radius: 12px; font-size: 22px;")
+        icon_lbl.setStyleSheet(f"background: #111111; color: #D4AF37; border: 2px solid #D4AF37; border-radius: 12px; font-size: 22px;")
 
         info = QVBoxLayout()
         info.setSpacing(2)
@@ -1442,18 +1481,18 @@ class StatCard(QFrame):
         import random
         v = random.randint(3, 18)
         tr_lbl = QLabel(f"↑ {v}% منذ الشهر الماضي")
-        tr_lbl.setStyleSheet(f"color: {COLORS['success']}; font-size: 10px; font-weight: 800; background: {COLORS['success']}10; padding: 2px 8px; border-radius: 6px;")
+        tr_lbl.setStyleSheet(f"color: #059669; font-size: 11px; font-weight: 800; background: rgba(5, 150, 105, 0.1); padding: 4px 10px; border-radius: 6px;")
         trend.addWidget(tr_lbl)
         trend.addStretch()
         lay.addLayout(trend)
 
         self.setStyleSheet(f"""
             QFrame#card {{
-                background: white; border: 2px solid #E5E7EB;
+                background: white; border: 2px solid #111111;
                 border-radius: 12px;
             }}
             QFrame#card:hover {{
-                border-color: #1E3A8A;
+                border-color: #D4AF37;
             }}
         """)
 
@@ -1676,13 +1715,13 @@ class DashboardPage(QWidget):
         self.cards = {}
         card_defs = [
             ("total_products",  "إجمالي المنتجات",    "0",      "📦", COLORS['accent']),
-            ("warehouses",      "المخازن النشطة",      "0",      "🏭", COLORS['purple']),
-            ("suppliers",       "الموردين",             "0",      "🏢", COLORS['success']),
-            ("inventory_value", "قيمة المخزون",        "AED 0",  "💰", COLORS['success']),
+            ("warehouses",      "المخازن النشطة",      "0",      "🏭", COLORS['accent']),
+            ("suppliers",       "الموردين",             "0",      "🏢", COLORS['accent']),
+            ("inventory_value", "قيمة المخزون",        "AED 0",  "💰", COLORS['accent']),
             ("stock_in_today",  "وارد اليوم",           "0",      "📥", COLORS['accent']),
-            ("stock_out_today", "صادر اليوم",           "0",      "📤", COLORS['danger']),
-            ("pending_requests","طلبات معلقة",          "0",      "⏳", COLORS['warning']),
-            ("critical_stock",  "مخزون حرج",           "0",      "🚨", COLORS['danger']),
+            ("stock_out_today", "صادر اليوم",           "0",      "📤", COLORS['accent']),
+            ("pending_requests","طلبات معلقة",          "0",      "⏳", COLORS['accent']),
+            ("critical_stock",  "مخزون حرج",           "0",      "🚨", COLORS['accent']),
         ]
         for i, (key, title, val, icon, color) in enumerate(card_defs):
             card = StatCard(title, val, icon, color)
@@ -4715,7 +4754,8 @@ class MainWindow(QMainWindow):
         # Top bar
         topbar = QFrame()
         topbar.setFixedHeight(70)
-        topbar.setStyleSheet(f"QFrame {{ background: {COLORS['white']}; border-bottom: 1px solid {COLORS['border']}; }}")
+        topbar.setObjectName("glass_panel")
+        topbar.setStyleSheet(f"QFrame#glass_panel {{ background: {COLORS['glass']}; border-bottom: 1px solid {COLORS['border']}; }}")
         tb_lay = QHBoxLayout(topbar)
         tb_lay.setContentsMargins(30, 0, 30, 0)
         tb_lay.setSpacing(20)
@@ -4729,7 +4769,7 @@ class MainWindow(QMainWindow):
         global_search.setPlaceholderText("🔍  بحث سريع في النظام...")
         global_search.setFixedWidth(300)
         global_search.setFixedHeight(40)
-        global_search.setStyleSheet(f"background: #FFFFFF; border-radius: 20px; border: 2px solid #D1D5DB; padding: 0 20px; color: #111827; font-weight: 500;")
+        global_search.setStyleSheet(f"background: #FFFFFF; border-radius: 20px; border: 2px solid {COLORS['accent']}; padding: 0 20px; color: #111111; font-weight: 600;")
         global_search.returnPressed.connect(lambda: self.global_search(global_search.text()))
         tb_lay.addWidget(global_search)
 
@@ -4800,10 +4840,10 @@ class MainWindow(QMainWindow):
         self.settings_page = SettingsPage(self.user)
 
         for page in [self.dashboard_page, self.products_page, self.categories_page, self.warehouses_page,
-                     self.suppliers_page, PlaceholderPage("أوامر الشراء"), self.stock_in_page, self.stock_out_page,
-                     self.transfers_page, self.audit_page, self.reports_page, PlaceholderPage("التحليلات"),
-                     self.notification_page, self.users_page, PlaceholderPage("الصلاحيات"), self.settings_page,
-                     PlaceholderPage("النسخ الاحتياطي"), PlaceholderPage("تحديث النظام")]:
+                     self.suppliers_page, EnterpriseModuleView("أوامر الشراء"), self.stock_in_page, self.stock_out_page,
+                     self.transfers_page, self.audit_page, self.reports_page, EnterpriseModuleView("التحليلات"),
+                     self.notification_page, self.users_page, EnterpriseModuleView("الصلاحيات"), self.settings_page,
+                     EnterpriseModuleView("النسخ الاحتياطي"), EnterpriseModuleView("تحديث النظام")]:
             self.stack.addWidget(page)
 
         scroll_area = QScrollArea()
@@ -4820,7 +4860,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(right_widget)
 
         self.statusBar().showMessage(
-            f"  ✅  مرحباً، {self.user.get('full_name', '')}  |  جهة: {COMPANY_NAME}")
+            f"  ✅  {COMPANY_NAME} — Enterprise Edition | مرحباً، {self.user.get('full_name', '')}")
         self.statusBar().setFixedHeight(28)
         self.update_notification_count()
 
