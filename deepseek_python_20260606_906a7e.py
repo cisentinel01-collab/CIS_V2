@@ -48,7 +48,7 @@ import qrcode
 # ─────────────────────────────────────────────────────────────────────────────
 APP_DIR = Path(__file__).parent
 DB_PATH = APP_DIR / "database.db"
-ASSETS_DIR = APP_DIR / "assets"
+ASSETS_DIR = APP_DIR / "logo"
 LOGO_PATH = ASSETS_DIR / "logo.png"
 BACKUP_DIR = APP_DIR / "backups"
 ATTACHMENTS_DIR = APP_DIR / "attachments"
@@ -108,24 +108,24 @@ AR = {
 # THEME
 # ─────────────────────────────────────────────────────────────────────────────
 COLORS = {
-    "bg_dark":       "#0B0F19",
-    "bg_nav":        "#111827",
-    "bg_card":       "#111827",
-    "bg_card2":      "#1F2937",
-    "accent":        "#60A5FA",
-    "accent2":       "#3B82F6",
+    "bg_dark":       "#05070A",
+    "bg_nav":        "#0C0E14",
+    "bg_card":       "#0C0E14",
+    "bg_card2":      "#141820",
+    "accent":        "#C0A060",  # Gold for a premium feel
+    "accent2":       "#907040",
     "accent_green":  "#10B981",
     "accent_red":    "#EF4444",
     "accent_orange": "#F59E0B",
     "accent_purple": "#8B5CF6",
-    "text_primary":  "#F9FAFB",
-    "text_secondary":"#9CA3AF",
-    "text_muted":    "#6B7280",
-    "border":        "#1F2937",
-    "border2":       "#374151",
-    "hover":         "#3B82F615",
-    "selected":      "#3B82F630",
-    "glass":         "rgba(96, 165, 250, 0.05)",
+    "text_primary":  "#F1F5F9",
+    "text_secondary":"#94A3B8",
+    "text_muted":    "#64748B",
+    "border":        "#1E293B",
+    "border2":       "#334155",
+    "hover":         "rgba(192, 160, 96, 0.1)",
+    "selected":      "rgba(192, 160, 96, 0.2)",
+    "glass":         "rgba(255, 255, 255, 0.03)",
     "warning_bg":    "#451A03",
     "critical_bg":   "#450A0A",
     "row_warning":   "#2D1B02",
@@ -136,7 +136,7 @@ STYLESHEET = f"""
 QMainWindow, QDialog, QWidget {{
     background-color: {COLORS['bg_dark']};
     color: {COLORS['text_primary']};
-    font-family: 'Segoe UI', 'Cairo', 'Tahoma', sans-serif;
+    font-family: 'Cairo', 'Segoe UI', sans-serif;
     font-size: 14px;
 }}
 QLabel {{
@@ -619,6 +619,20 @@ class DatabaseManager:
                 FOREIGN KEY (uploaded_by) REFERENCES users(id)
             );
 
+            -- OFFERS
+            CREATE TABLE IF NOT EXISTS offers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                offer_key TEXT UNIQUE NOT NULL,
+                discount_type TEXT NOT NULL, -- percentage or amount
+                discount_value REAL NOT NULL,
+                apply_to TEXT, -- all, category, or product_id
+                apply_id TEXT,
+                start_date TEXT,
+                end_date TEXT,
+                is_active INTEGER DEFAULT 1,
+                created_at TEXT DEFAULT (datetime('now'))
+            );
+
             -- SETTINGS
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
@@ -696,6 +710,7 @@ class DatabaseManager:
             # Add phone/dept to users
             "ALTER TABLE users ADD COLUMN phone TEXT",
             "ALTER TABLE users ADD COLUMN department TEXT",
+            "ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '[]'",
         ]
         with self.get_conn() as conn:
             for sql in migrations:
@@ -905,8 +920,23 @@ ROLE_PERMISSIONS = {
 
 
 def has_perm(perm: str) -> bool:
-    perms = ROLE_PERMISSIONS.get(CURRENT_USER.get("role", "Viewer"), set())
-    return "all" in perms or perm in perms
+    # Role based
+    role_perms = ROLE_PERMISSIONS.get(CURRENT_USER.get("role", "Viewer"), set())
+    if "all" in role_perms or perm in role_perms:
+        return True
+
+    # User based (granular)
+    user_perms_raw = CURRENT_USER.get("permissions") or "[]"
+    try:
+        user_perms = json.loads(user_perms_raw.replace("'", '"')) if isinstance(user_perms_raw, str) else user_perms_raw
+        if isinstance(user_perms, list) and (perm in user_perms or "all" in user_perms):
+            return True
+        if isinstance(user_perms, str) and (perm in user_perms or "all" in user_perms):
+            return True
+    except:
+        if perm in str(user_perms_raw): return True
+
+    return False
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -941,12 +971,12 @@ class SplashScreen(QSplashScreen):
         p.setPen(QColor("#F1F5F9"))
         p.setFont(QFont("Segoe UI", 15, QFont.Bold))
         p.drawText(QRect(0, 160, w, 30), Qt.AlignCenter, COMPANY_NAME)
-        p.setFont(QFont("Segoe UI", 12))
-        p.setPen(QColor("#0EA5E9"))
+        p.setFont(QFont("Cairo", 12))
+        p.setPen(QColor(COLORS['accent']))
         p.drawText(QRect(0, 192, w, 26), Qt.AlignCenter, "نظام إدارة المخازن المؤسسي")
-        p.setFont(QFont("Tahoma", 10))
-        p.setPen(QColor("#475569"))
-        p.drawText(QRect(0, 222, w, 22), Qt.AlignCenter, "Enterprise Warehouse ERP — Production v2.0")
+        p.setFont(QFont("Cairo", 10))
+        p.setPen(QColor(COLORS['text_muted']))
+        p.drawText(QRect(0, 222, w, 22), Qt.AlignCenter, "نظام تخطيط موارد المؤسسات — AMS")
         p.setPen(QPen(QColor("#1E293B"), 1))
         p.drawLine(80, 280, 640, 280)
         p.end()
@@ -1094,11 +1124,11 @@ class LoginWindow(QDialog):
                 cl.addWidget(edit)
             setattr(self, attr, edit)
 
-        self.login_btn = QPushButton("🔐  دخول")
+        self.login_btn = QPushButton("🔐  دخول النظام")
         self.login_btn.setFixedHeight(46)
         self.login_btn.setStyleSheet(f"""
             QPushButton {{
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 {COLORS['accent']}, stop:1 #0369A1);
+                background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 {COLORS['accent']}, stop:1 {COLORS['accent2']});
                 color: white; border: none; border-radius: 10px;
                 font-size: 15px; font-weight: 700;
             }}
@@ -1173,13 +1203,13 @@ class SidebarButton(QPushButton):
     def _style(self, active):
         if active:
             return f"""QPushButton {{
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 {COLORS['accent']}22, stop:1 transparent);
-                color: {COLORS['accent2']}; border: none; border-right: 3px solid {COLORS['accent']};
+                background: qlineargradient(x1:1,y1:0,x2:0,y2:0, stop:0 {COLORS['accent']}22, stop:1 transparent);
+                color: {COLORS['accent']}; border: none; border-left: 3px solid {COLORS['accent']};
                 border-radius: 0; text-align: right; padding-right: 16px; font-weight: 700; font-size: 13px;
             }}"""
         return f"""QPushButton {{
                 background: transparent; color: {COLORS['text_secondary']}; border: none;
-                border-right: 3px solid transparent; border-radius: 0;
+                border-left: 3px solid transparent; border-radius: 0;
                 text-align: right; padding-right: 16px; font-size: 13px;
             }}
             QPushButton:hover {{ background: {COLORS['bg_card2']}; color: {COLORS['text_primary']}; }}"""
@@ -1706,6 +1736,12 @@ class WarehousesPage(QWidget):
             edit_btn.setObjectName("btn_flat")
             edit_btn.clicked.connect(lambda _, row=r: self.edit_warehouse(row))
             bl.addWidget(edit_btn)
+            if has_perm("all"):
+                del_btn = QPushButton("🗑")
+                del_btn.setFixedSize(30, 28)
+                del_btn.setObjectName("btn_danger")
+                del_btn.clicked.connect(lambda _, row=r: self.delete_warehouse(row))
+                bl.addWidget(del_btn)
             self.table.setCellWidget(i, 6, btns)
 
     def add_warehouse(self):
@@ -1716,6 +1752,14 @@ class WarehousesPage(QWidget):
     def edit_warehouse(self, row):
         dlg = WarehouseDialog(self, dict(row))
         if dlg.exec() == QDialog.Accepted:
+            self.load_data()
+
+    def delete_warehouse(self, row):
+        reply = QMessageBox.question(self, "تأكيد", f"هل أنت متأكد من حذف المخزن: {row['warehouse_name']}؟",
+                                     QMessageBox.Yes | QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            db.execute("UPDATE warehouses SET is_active=0 WHERE id=?", (row['id'],))
+            log("حذف مخزن", "warehouses", row['id'], row['warehouse_name'])
             self.load_data()
 
 
@@ -2077,6 +2121,12 @@ class ProductsPage(QWidget):
             tb_btn.clicked.connect(lambda _, row=dict(r): self.show_trace(row))
             bl.addWidget(eb)
             bl.addWidget(tb_btn)
+            if has_perm("all"):
+                dbb = QPushButton("🗑")
+                dbb.setFixedSize(28, 26)
+                dbb.setObjectName("btn_danger")
+                dbb.clicked.connect(lambda _, row=dict(r): self.delete_product(row))
+                bl.addWidget(dbb)
             self.table.setCellWidget(i, 10, btns)
 
         if warnings or criticals:
@@ -2090,6 +2140,14 @@ class ProductsPage(QWidget):
     def edit_product(self, row):
         dlg = ProductDialog(self, row)
         if dlg.exec() == QDialog.Accepted:
+            self.load_products()
+
+    def delete_product(self, row):
+        reply = QMessageBox.question(self, "تأكيد", f"هل أنت متأكد من حذف المنتج: {row['name']}؟",
+                                     QMessageBox.Yes | QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            db.execute("UPDATE products SET is_active=0 WHERE id=?", (row['id'],))
+            log("حذف منتج", "products", row['id'], row['name'])
             self.load_products()
 
     def view_trace(self, index):
@@ -2308,6 +2366,12 @@ class SuppliersPage(QWidget):
             eb = QPushButton("✏️"); eb.setFixedSize(28,26); eb.setObjectName("btn_flat")
             eb.clicked.connect(lambda _, row=dict(r): self.edit_supplier(row))
             bl.addWidget(eb)
+            if has_perm("all"):
+                dbb = QPushButton("🗑")
+                dbb.setFixedSize(28, 26)
+                dbb.setObjectName("btn_danger")
+                dbb.clicked.connect(lambda _, row=dict(r): self.delete_supplier(row))
+                bl.addWidget(dbb)
             self.table.setCellWidget(i, 6, bw)
 
     def add_supplier(self):
@@ -2319,6 +2383,15 @@ class SuppliersPage(QWidget):
         dlg = SupplierDialog(self, row)
         if dlg.exec() == QDialog.Accepted:
             self.load_data(); self.suppliers_changed.emit()
+
+    def delete_supplier(self, row):
+        reply = QMessageBox.question(self, "تأكيد", f"هل أنت متأكد من حذف المورد: {row['name']}؟",
+                                     QMessageBox.Yes | QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            db.execute("UPDATE suppliers SET is_active=0 WHERE id=?", (row['id'],))
+            log("حذف مورد", "suppliers", row['id'], row['name'])
+            self.load_data()
+            self.suppliers_changed.emit()
 
     def refresh_suppliers(self):
         self.load_data()
@@ -2592,7 +2665,10 @@ class StockOutPage(QWidget):
         form.addWidget(QLabel("رقم الهوية:"), 2, 2); form.addWidget(self.emp_id_edit, 2, 3)
         form.addWidget(QLabel("هاتف المستلم:"), 3, 0); form.addWidget(self.emp_phone_edit, 3, 1)
         form.addWidget(QLabel("سبب الصرف *:"), 3, 2); form.addWidget(self.reason_edit, 3, 3)
-        form.addWidget(QLabel("ملاحظات:"), 4, 0); form.addWidget(self.notes_edit, 4, 1, 1, 3)
+        self.offer_code_edit = QLineEdit()
+        self.offer_code_edit.setPlaceholderText("أدخل كود الخصم إن وجد")
+        form.addWidget(QLabel("كود الخصم:"), 4, 0); form.addWidget(self.offer_code_edit, 4, 1)
+        form.addWidget(QLabel("ملاحظات:"), 4, 2); form.addWidget(self.notes_edit, 4, 3)
         t1l.addLayout(form)
 
         # Items
@@ -2738,6 +2814,14 @@ class StockOutPage(QWidget):
             db.execute("INSERT INTO stock_out_items (stock_out_id, product_id, quantity) VALUES (?,?,?)",
                        (so_id, it['product_id'], it['quantity']))
 
+        offer_code = self.offer_code_edit.text().strip()
+        if offer_code:
+            off = db.fetchone("SELECT * FROM offers WHERE offer_key=? AND is_active=1", (offer_code,))
+            if off:
+                log(f"تطبيق خصم: {offer_code}", "offers", off['id'], f"القيمة: {off['discount_value']}")
+            else:
+                QMessageBox.warning(self, "تنبيه", "كود الخصم غير صحيح أو منتهي")
+
         log("إضافة طلب صرف", "stock_out", so_id, req_num)
         # Create notification
         db.execute("INSERT INTO notifications (title, message, type) VALUES (?,?,?)",
@@ -2867,6 +2951,12 @@ class StockOutPage(QWidget):
                 self.history_table.setItem(i, col, QTableWidgetItem(val))
             bw = QWidget(); bl = QHBoxLayout(bw); bl.setContentsMargins(2,1,2,1); bl.setSpacing(3)
             if r['status'] == 'تم التسليم':
+                pr_btn = QPushButton("🖨️")
+                pr_btn.setFixedSize(28, 26)
+                pr_btn.setObjectName("btn_flat")
+                pr_btn.setToolTip("طباعة الفاتورة")
+                pr_btn.clicked.connect(lambda _, rid=r['id']: self.print_invoice(rid))
+                bl.addWidget(pr_btn)
                 ret_btn = QPushButton("↩️")
                 ret_btn.setFixedSize(28, 26)
                 ret_btn.setObjectName("btn_warning")
@@ -2874,6 +2964,78 @@ class StockOutPage(QWidget):
                 ret_btn.clicked.connect(lambda _, rid=r['id']: self.return_items(rid))
                 bl.addWidget(ret_btn)
             self.history_table.setCellWidget(i, 7, bw)
+
+    def print_invoice(self, so_id):
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+        import arabic_reshaper
+        from bidi.algorithm import get_display
+
+        def ar(txt):
+            if not txt: return ""
+            reshaped_text = arabic_reshaper.reshape(str(txt))
+            return get_display(reshaped_text)
+
+        so = db.fetchone("SELECT so.*, w.warehouse_name FROM stock_out so LEFT JOIN warehouses w ON so.warehouse_id=w.id WHERE so.id=?", (so_id,))
+        items = db.fetchall("SELECT soi.*, p.name, p.product_id FROM stock_out_items soi JOIN products p ON soi.product_id=p.id WHERE soi.stock_out_id=?", (so_id,))
+
+        path, _ = QFileDialog.getSaveFileName(self, "حفظ الفاتورة", f"فاتورة_{so['request_number']}.pdf", "PDF Files (*.pdf)")
+        if not path: return
+
+        doc = SimpleDocTemplate(path, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        # Header
+        title_style = ParagraphStyle('Title', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=18, alignment=TA_CENTER, textColor=colors.HexColor(COLORS['accent']))
+        elements.append(Paragraph(ar(COMPANY_NAME), title_style))
+        if LOGO_PATH.exists():
+            elements.append(RLImage(str(LOGO_PATH), width=50*mm, height=20*mm))
+        elements.append(Spacer(1, 10))
+
+        # Info Table
+        info_data = [
+            [ar(f"التاريخ: {so['date']}"), ar(f"رقم الطلب: {so['request_number']}")],
+            [ar(f"المستلم: {so['employee']}"), ar(f"المخزن: {so['warehouse_name']}")],
+            [ar(f"القسم: {so['department']}"), ar(f"السبب: {so['reason']}")]
+        ]
+        it = Table(info_data, colWidths=[270, 270])
+        it.setStyle(TableStyle([
+            ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+            ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
+            ('TEXTCOLOR', (0,0), (-1,-1), colors.black),
+            ('SIZE', (0,0), (-1,-1), 10),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ]))
+        elements.append(it)
+        elements.append(Spacer(1, 20))
+
+        # Items Table
+        header = [ar("الإجمالي"), ar("الكمية"), ar("اسم الصنف"), ar("كود الصنف")]
+        table_data = [header]
+        for itm in items:
+            table_data.append(["—", f"{itm['quantity']:.0f}", ar(itm['name']), itm['product_id']])
+
+        t = Table(table_data, colWidths=[100, 80, 260, 100])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(COLORS['bg_nav'])),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('SIZE', (0, 1), (-1, -1), 10),
+        ]))
+        elements.append(t)
+
+        # Footer
+        elements.append(Spacer(1, 40))
+        elements.append(Paragraph(ar("توقيع المستلم: ..........................                توقيع المسؤول: .........................."), styles['Normal']))
+
+        doc.build(elements)
+        QMessageBox.information(self, "تم", f"تم إنشاء الفاتورة بنجاح:\n{path}")
 
     def return_items(self, so_id):
         dlg = ReturnDialog(self, so_id)
@@ -3577,6 +3739,9 @@ class UsersPage(QWidget):
                 eb = QPushButton("✏️"); eb.setFixedSize(28,26); eb.setObjectName("btn_flat")
                 eb.clicked.connect(lambda _, row=dict(r): self.edit_user(row))
                 bl.addWidget(eb)
+                dbb = QPushButton("🗑"); dbb.setFixedSize(28,26); dbb.setObjectName("btn_danger")
+                dbb.clicked.connect(lambda _, row=dict(r): self.delete_user(row))
+                bl.addWidget(dbb)
                 self.table.setCellWidget(i, 6, bw)
 
     def add_user(self):
@@ -3587,6 +3752,17 @@ class UsersPage(QWidget):
     def edit_user(self, row):
         dlg = UserDialog(self, row)
         if dlg.exec() == QDialog.Accepted:
+            self.load_data()
+
+    def delete_user(self, row):
+        if row['username'] == 'admin':
+            QMessageBox.critical(self, "خطأ", "لا يمكن حذف مدير النظام الرئيسي")
+            return
+        reply = QMessageBox.question(self, "تأكيد", f"هل أنت متأكد من حذف المستخدم: {row['username']}؟",
+                                     QMessageBox.Yes | QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            db.execute("UPDATE users SET is_active=0 WHERE id=?", (row['id'],))
+            log("حذف مستخدم", "users", row['id'], row['username'])
             self.load_data()
 
 
@@ -3611,11 +3787,14 @@ class UserDialog(QDialog):
         self.password_edit = QLineEdit(); self.password_edit.setEchoMode(QLineEdit.Password)
         self.password_edit.setPlaceholderText("اتركه فارغاً للإبقاء على كلمة المرور الحالية" if self.user else "")
         self.role_combo = QComboBox()
-        self.role_combo.addItems(["Admin", "Warehouse Manager", "Store Keeper", "Auditor", "Viewer"])
+        self.role_combo.addItems(["مدير نظام", "مدير مخازن", "أمين مخزن", "مدقق", "مشاهد"])
         self.email_edit = QLineEdit()
         self.dept_edit = QLineEdit()
         self.phone_edit = QLineEdit()
         self.active_cb = QCheckBox("مستخدم نشط"); self.active_cb.setChecked(True)
+        self.perms_edit = QTextEdit()
+        self.perms_edit.setPlaceholderText("مثال: view,add,edit,delete")
+        self.perms_edit.setFixedHeight(60)
         form.addRow("اسم المستخدم *:", self.username_edit)
         form.addRow("الاسم الكامل:", self.fullname_edit)
         form.addRow("كلمة المرور:", self.password_edit)
@@ -3623,17 +3802,20 @@ class UserDialog(QDialog):
         form.addRow("القسم:", self.dept_edit)
         form.addRow("البريد الإلكتروني:", self.email_edit)
         form.addRow("الهاتف:", self.phone_edit)
+        form.addRow("صلاحيات إضافية (JSON):", self.perms_edit)
         form.addRow("", self.active_cb)
         lay.addLayout(form)
         if self.user:
             self.username_edit.setText(self.user['username'])
             self.fullname_edit.setText(self.user.get('full_name') or "")
-            idx = self.role_combo.findText(self.user['role'])
+            role_map_inv = {"Admin": "مدير نظام", "Warehouse Manager": "مدير مخازن", "Store Keeper": "أمين مخزن", "Auditor": "مدقق", "Viewer": "مشاهد"}
+            idx = self.role_combo.findText(role_map_inv.get(self.user['role'], self.user['role']))
             if idx >= 0: self.role_combo.setCurrentIndex(idx)
             self.email_edit.setText(self.user.get('email') or "")
             self.dept_edit.setText(self.user.get('department') or "")
             self.phone_edit.setText(self.user.get('phone') or "")
             self.active_cb.setChecked(bool(self.user.get('is_active', 1)))
+            self.perms_edit.setText(self.user.get('permissions') or "[]")
         btns = QHBoxLayout(); btns.addStretch()
         cb = QPushButton("إلغاء"); cb.setObjectName("btn_flat"); cb.clicked.connect(self.reject)
         sb = QPushButton("💾  حفظ"); sb.setObjectName("btn_success"); sb.clicked.connect(self.save)
@@ -3646,28 +3828,32 @@ class UserDialog(QDialog):
             QMessageBox.warning(self, "تنبيه", "اسم المستخدم مطلوب")
             return
         pw = self.password_edit.text()
+        role_map = {"مدير نظام": "Admin", "مدير مخازن": "Warehouse Manager", "أمين مخزن": "Store Keeper", "مدقق": "Auditor", "مشاهد": "Viewer"}
+        role = role_map.get(self.role_combo.currentText(), "Viewer")
+
+        perms = self.perms_edit.toPlainText().strip() or "[]"
         if self.user:
             if pw:
                 pw_hash = hashlib.sha256(pw.encode()).hexdigest()
-                db.execute("UPDATE users SET username=?, full_name=?, password=?, role=?, email=?, department=?, phone=?, is_active=? WHERE id=?",
-                           (uname, self.fullname_edit.text().strip(), pw_hash, self.role_combo.currentText(),
+                db.execute("UPDATE users SET username=?, full_name=?, password=?, role=?, email=?, department=?, phone=?, is_active=?, permissions=? WHERE id=?",
+                           (uname, self.fullname_edit.text().strip(), pw_hash, role,
                             self.email_edit.text().strip(), self.dept_edit.text().strip(),
-                            self.phone_edit.text().strip(), int(self.active_cb.isChecked()), self.user['id']))
+                            self.phone_edit.text().strip(), int(self.active_cb.isChecked()), perms, self.user['id']))
             else:
-                db.execute("UPDATE users SET username=?, full_name=?, role=?, email=?, department=?, phone=?, is_active=? WHERE id=?",
-                           (uname, self.fullname_edit.text().strip(), self.role_combo.currentText(),
+                db.execute("UPDATE users SET username=?, full_name=?, role=?, email=?, department=?, phone=?, is_active=?, permissions=? WHERE id=?",
+                           (uname, self.fullname_edit.text().strip(), role,
                             self.email_edit.text().strip(), self.dept_edit.text().strip(),
-                            self.phone_edit.text().strip(), int(self.active_cb.isChecked()), self.user['id']))
+                            self.phone_edit.text().strip(), int(self.active_cb.isChecked()), perms, self.user['id']))
         else:
             if not pw:
                 QMessageBox.warning(self, "تنبيه", "كلمة المرور مطلوبة")
                 return
             pw_hash = hashlib.sha256(pw.encode()).hexdigest()
-            db.execute("""INSERT INTO users (username, password, full_name, role, email, department, phone, is_active)
-                VALUES (?,?,?,?,?,?,?,?)""",
-                (uname, pw_hash, self.fullname_edit.text().strip(), self.role_combo.currentText(),
+            db.execute("""INSERT INTO users (username, password, full_name, role, email, department, phone, is_active, permissions)
+                VALUES (?,?,?,?,?,?,?,?,?)""",
+                (uname, pw_hash, self.fullname_edit.text().strip(), role,
                  self.email_edit.text().strip(), self.dept_edit.text().strip(),
-                 self.phone_edit.text().strip(), int(self.active_cb.isChecked())))
+                 self.phone_edit.text().strip(), int(self.active_cb.isChecked()), perms))
         log("حفظ مستخدم", "users", details=uname)
         self.accept()
 
@@ -3704,7 +3890,8 @@ class SettingsPage(QWidget):
         self.currency_combo.setCurrentText(db.get_setting("currency", "AED"))
         self.tax_spin = QDoubleSpinBox()
         self.tax_spin.setRange(0, 100)
-        self.tax_spin.setValue(float(db.get_setting("tax_rate", "5")))
+        self.tax_spin.setValue(float(db.get_setting("tax_rate", "0")))
+        self.tax_spin.setVisible(False) # Hide as requested
         self.alarm_cb = QCheckBox("تفعيل تنبيهات المخزون")
         self.alarm_cb.setChecked(db.get_setting("alarm_enabled", "true") == "true")
         self.auto_backup_cb = QCheckBox("النسخ الاحتياطي التلقائي")
@@ -3714,7 +3901,7 @@ class SettingsPage(QWidget):
 
         f1.addRow("اسم الشركة:", self.company_edit)
         f1.addRow("العملة:", self.currency_combo)
-        f1.addRow("نسبة الضريبة (%):", self.tax_spin)
+        # f1.addRow("نسبة الضريبة (%):", self.tax_spin)
         f1.addRow("", self.alarm_cb)
         f1.addRow("", self.auto_backup_cb)
         f1.addRow("", self.notif_sound_cb)
@@ -3724,6 +3911,49 @@ class SettingsPage(QWidget):
         save_btn.clicked.connect(self.save_settings)
         f1.addRow("", save_btn)
         tabs.addTab(t1, "إعدادات عامة")
+
+        # Offers & Discounts
+        if CURRENT_USER.get("role") in ["Admin", "Warehouse Manager"]:
+            t_off = QWidget()
+            t_off_l = QVBoxLayout(t_off)
+            t_off_l.setContentsMargins(20, 16, 20, 16)
+
+            ot = QLabel("🎟️  إدارة العروض والخصومات")
+            ot.setStyleSheet(f"font-size: 15px; font-weight: 700; color: {COLORS['accent']};")
+            t_off_l.addWidget(ot)
+
+            oform = QFormLayout()
+            self.offer_key = QLineEdit()
+            self.offer_key.setPlaceholderText("مثال: RAMADAN2024")
+            gen_key_btn = QPushButton("🔄 توليد كود")
+            gen_key_btn.clicked.connect(self.generate_key)
+            kh = QHBoxLayout(); kh.addWidget(self.offer_key); kh.addWidget(gen_key_btn)
+
+            self.offer_type = QComboBox()
+            self.offer_type.addItems(["نسبة مئوية (%)", "مبلغ ثابت"])
+            self.offer_val = QDoubleSpinBox()
+            self.offer_val.setRange(0, 1000000)
+
+            self.offer_apply = QComboBox()
+            self.offer_apply.addItems(["كل المنتجات", "فئة محددة", "منتج محدد"])
+
+            oform.addRow("كود الخصم:", kh)
+            oform.addRow("نوع الخصم:", self.offer_type)
+            oform.addRow("قيمة الخصم:", self.offer_val)
+            oform.addRow("ينطبق على:", self.offer_apply)
+
+            add_off_btn = QPushButton("➕ إضافة العرض")
+            add_off_btn.setObjectName("btn_success")
+            add_off_btn.clicked.connect(self.save_offer)
+            oform.addRow("", add_off_btn)
+            t_off_l.addLayout(oform)
+
+            self.offers_table = QTableWidget()
+            self.offers_table.setColumnCount(5)
+            self.offers_table.setHorizontalHeaderLabels(["الكود", "النوع", "القيمة", "التطبيق", "إجراءات"])
+            t_off_l.addWidget(self.offers_table)
+            tabs.addTab(t_off, "العروض والخصومات")
+            self.load_offers()
 
         # Backup
         t2 = QWidget()
@@ -3753,6 +3983,31 @@ class SettingsPage(QWidget):
         tabs.addTab(t2, "النسخ الاحتياطي")
 
         lay.addWidget(tabs)
+
+    def generate_key(self):
+        import random, string
+        k = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        self.offer_key.setText(k)
+
+    def save_offer(self):
+        key = self.offer_key.text().strip()
+        if not key: return
+        db.execute("INSERT INTO offers (offer_key, discount_type, discount_value, apply_to) VALUES (?,?,?,?)",
+                   (key, self.offer_type.currentText(), self.offer_val.value(), self.offer_apply.currentText()))
+        self.load_offers()
+        self.offer_key.clear()
+
+    def load_offers(self):
+        rows = db.fetchall("SELECT * FROM offers WHERE is_active=1")
+        self.offers_table.setRowCount(len(rows))
+        for i, r in enumerate(rows):
+            self.offers_table.setItem(i, 0, QTableWidgetItem(r['offer_key']))
+            self.offers_table.setItem(i, 1, QTableWidgetItem(r['discount_type']))
+            self.offers_table.setItem(i, 2, QTableWidgetItem(str(r['discount_value'])))
+            self.offers_table.setItem(i, 3, QTableWidgetItem(r['apply_to']))
+            dbb = QPushButton("🗑")
+            dbb.clicked.connect(lambda _, rid=r['id']: (db.execute("UPDATE offers SET is_active=0 WHERE id=?", (rid,)), self.load_offers()))
+            self.offers_table.setCellWidget(i, 4, dbb)
 
     def save_settings(self):
         db.set_setting("company_name", self.company_edit.text().strip())
@@ -3883,7 +4138,7 @@ class MainWindow(QMainWindow):
         # ── Sidebar (RTL: right side) ──
         sidebar = QFrame()
         sidebar.setFixedWidth(230)
-        sidebar.setStyleSheet(f"QFrame {{ background: {COLORS['bg_nav']}; border-left: 1px solid {COLORS['border2']}; }}")
+        sidebar.setStyleSheet(f"QFrame {{ background: {COLORS['bg_nav']}; border-right: 1px solid {COLORS['border2']}; }}")
         sidebar_lay = QVBoxLayout(sidebar)
         sidebar_lay.setContentsMargins(0, 0, 0, 0)
         sidebar_lay.setSpacing(0)
@@ -3922,9 +4177,9 @@ class MainWindow(QMainWindow):
         avatar.setAlignment(Qt.AlignCenter)
         avatar.setStyleSheet(f"background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 {COLORS['accent']}, stop:1 {COLORS['accent2']}); border-radius: 20px; color: white; font-size: 16px; font-weight: 800;")
         ui2 = QVBoxLayout(); ui2.setSpacing(2)
-        nl = QLabel(self.user.get('full_name', self.user.get('username', 'User')))
+        nl = QLabel(self.user.get('full_name', self.user.get('username', 'مستخدم')))
         nl.setStyleSheet(f"color: {COLORS['text_primary']}; font-size: 12px; font-weight: 600;")
-        rl = QLabel(self.user.get('role', 'Viewer'))
+        rl = QLabel(self.user.get('role', 'مشاهد'))
         rl.setStyleSheet(f"color: {COLORS['accent']}; font-size: 10px;")
         ui2.addWidget(nl); ui2.addWidget(rl)
         ul.addWidget(avatar); ul.addLayout(ui2)
@@ -4050,7 +4305,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(sidebar)
 
         self.statusBar().showMessage(
-            f"  ✅  مرحباً، {self.user.get('full_name', '')}  |  الصلاحية: {self.user.get('role', '')}  |  {COMPANY_NAME}")
+            f"  ✅  مرحباً، {self.user.get('full_name', '')}  |  جهة: {COMPANY_NAME}")
         self.statusBar().setFixedHeight(28)
         self.update_notification_count()
 
